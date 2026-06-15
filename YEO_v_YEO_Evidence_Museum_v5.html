@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YEO v. YEO — The Evidence Museum v5</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+
+  :root {
+    --bg-dark: #070709; --bg-card: #0e0e14; --bg-card-hover: #14141d;
+    --border: rgba(212, 175, 55, 0.15);
+    --primary: #d4af37; --primary-dim: #8c7023; --primary-glow: rgba(212, 175, 55, 0.08);
+    --accent-copper: #b87333; --accent-amber: #d97706; --accent-red: #8b0000;
+    --accent-red-glow: rgba(139, 0, 0, 0.15);
+    --text: #e2e8f0; --text-dim: #94a3b8; --text-quote: #ebdca9; --text-dark: #0f172a;
+    --font-serif: 'Playfair Display', Georgia, serif;
+    --font-sans: 'Inter', sans-serif;
+    --font-heading: 'Outfit', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--primary-dim) var(--bg-dark); }
+  body {
+    font-family: var(--font-sans); background-color: var(--bg-dark); color: var(--text);
+    line-height: 1.8; overflow-x: hidden; transition: background 1.2s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+  body[data-active-room="hook"] {
+    background: radial-gradient(ellipse at 50% 30%, rgba(212, 175, 55, 0.12) 0%, transparent 60%), #070709;
+    --primary: #d4af37; --border: rgba(212, 175, 55, 0.15); --bg-card: #0d0d12;
+  }
+  body[data-active-room="room1"] {
+    background: radial-gradient(ellipse at 50% 40%, rgba(212, 175, 55, 0.08) 0%, transparent 60%), #08080c;
+    --primary: #ebdca9; --border: rgba(212, 175, 55, 0.12); --bg-card: #0f0f15;
+  }
+  body[data-active-room="room2"] {
+    background: radial-gradient(ellipse at 50% 45%, rgba(184, 115, 51, 0.1) 0%, transparent 65%), #0a0808;
+    --primary: var(--accent-copper); --border: rgba(184, 115, 51, 0.15); --bg-card: #120e0e;
+  }
+  body[data-active-room="room3"] {
+    background: radial-gradient(ellipse at 50% 45%, rgba(217, 119, 6, 0.08) 0%, transparent 65%), #0b0907;
+    --primary: var(--accent-amber); --border: rgba(217, 119, 6, 0.15); --bg-card: #13100b;
+  }
+  body[data-active-room="room4"] {
+    background: radial-gradient(ellipse at 50% 50%, rgba(221, 107, 32, 0.08) 0%, transparent 70%), #0c0807;
+    --primary: #dd6b20; --border: rgba(221, 107, 32, 0.18); --bg-card: #140d0b;
+  }
+  body[data-active-room="room5"] {
+    background: radial-gradient(ellipse at 50% 50%, rgba(139, 0, 0, 0.09) 0%, transparent 70%), #0a0606;
+    --primary: var(--accent-red); --border: rgba(139, 0, 0, 0.25); --bg-card: #120909;
+  }
+  body[data-active-room="room6"] {
+    background: radial-gradient(ellipse at 50% 55%, rgba(139, 0, 0, 0.12) 0%, transparent 75%), #050505;
+    --primary: #c41e3a; --border: rgba(139, 0, 0, 0.35); --bg-card: #100808;
+  }
+
+  #metadata-ledger {
+    position: fixed; top: 4.5rem; left: 2rem; width: 220px;
+    background: rgba(15, 15, 20, 0.85); border: 1px solid var(--border);
+    backdrop-filter: blur(12px); border-radius: 8px; padding: 1.2rem;
+    z-index: 90; display: flex; flex-direction: column; gap: 0.8rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: all 0.5s ease;
+  }
+  @media(max-width: 1024px) { #metadata-ledger { display: none; } }
+  .ledger-title { font-family: var(--font-mono); font-size: 0.58rem; text-transform: uppercase; letter-spacing: 2px; color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 0.4rem; margin-bottom: 0.2rem; }
+  .ledger-metric { display: flex; justify-content: space-between; align-items: center; }
+  .ledger-val { font-family: var(--font-mono); font-weight: 700; font-size: 1rem; color: #fff; }
+  .ledger-lbl { font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .nav-ribbon {
+    position: sticky; top: 0; z-index: 100; background: rgba(7, 7, 9, 0.88);
+    backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); padding: 0.8rem 2rem;
+    display: flex; justify-content: space-between; align-items: center; transition: border-color 0.8s ease;
+  }
+  .nav-brand { font-family: var(--font-heading); font-weight: 800; font-size: 1rem; letter-spacing: 2px; color: var(--primary); text-decoration: none; text-transform: uppercase; transition: color 0.5s; }
+  .nav-links { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+  @media(max-width: 768px) { .nav-links { display: none; } }
+  .nav-btn { padding: 0.35rem 0.8rem; border: 1px solid transparent; border-radius: 20px; background: transparent; color: var(--text-dim); font-family: var(--font-sans); font-size: 0.68rem; font-weight: 500; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); letter-spacing: 0.5px; }
+  .nav-btn:hover, .nav-btn.active { color: var(--primary); border-color: var(--border); background: rgba(255,255,255,0.02); }
+  .cast-trigger { padding: 0.4rem 1.2rem; border: 1px solid var(--border); background: var(--primary-glow); color: var(--primary); font-family: var(--font-mono); font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; border-radius: 4px; cursor: pointer; transition: all 0.3s; }
+  .cast-trigger:hover { background: var(--primary); color: var(--bg-dark); }
+
+  #cast-panel { position: fixed; top: 0; right: -420px; width: 400px; height: 100vh; background: #0b0b0f; border-left: 1px solid var(--border); z-index: 1000; transition: right 0.5s cubic-bezier(0.19, 1, 0.22, 1); box-shadow: -10px 0 40px rgba(0,0,0,0.8); padding: 2.5rem 2rem; overflow-y: auto; }
+  #cast-panel.open { right: 0; }
+  .cast-panel-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 2rem; }
+  .cast-panel-title { font-family: var(--font-heading); font-weight: 800; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 3px; color: var(--primary); }
+  .cast-close { background: none; border: none; color: var(--text-dim); font-size: 1.5rem; cursor: pointer; transition: color 0.2s; }
+  .cast-close:hover { color: #fff; }
+  .cast-list { display: flex; flex-direction: column; gap: 1.5rem; }
+  .cast-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; padding: 1.2rem; transition: border-color 0.3s; }
+  .cast-card:hover { border-color: var(--border); }
+  .cast-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.8rem; }
+  .cast-avatar { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--primary); object-fit: cover; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 0.9rem; font-weight: 700; color: var(--primary); background: rgba(255,255,255,0.03); }
+  .cast-meta { display: flex; flex-direction: column; }
+  .cast-name { font-family: var(--font-heading); font-weight: 700; font-size: 0.95rem; color: #fff; }
+  .cast-role { font-family: var(--font-mono); font-size: 0.65rem; text-transform: uppercase; color: var(--primary); letter-spacing: 1px; margin-bottom: 0.2rem; }
+  .cast-desc { font-size: 0.78rem; color: var(--text-dim); line-height: 1.6; }
+  .cast-grade { display: inline-block; font-family: var(--font-mono); font-size: 0.58rem; padding: 0.15rem 0.5rem; border-radius: 3px; margin-top: 0.5rem; letter-spacing: 1px; text-transform: uppercase; }
+  .grade-gold { background: rgba(212,175,55,0.12); color: #d4af37; border: 1px solid rgba(212,175,55,0.3); }
+  .grade-copper { background: rgba(184,115,51,0.12); color: #b87333; border: 1px solid rgba(184,115,51,0.3); }
+  .grade-amber { background: rgba(217,119,6,0.12); color: #d97706; border: 1px solid rgba(217,119,6,0.3); }
+  .grade-blood { background: rgba(139,0,0,0.15); color: #e07060; border: 1px solid rgba(139,0,0,0.3); }
+
+  .entrance { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 4rem 2rem; position: relative; }
+  .entrance-label { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 8px; text-transform: uppercase; color: var(--primary); border: 1px solid var(--border); padding: 0.5rem 1.8rem; border-radius: 20px; margin-bottom: 2.5rem; background: rgba(0,0,0,0.4); }
+  .entrance h1 { font-family: var(--font-serif); font-size: clamp(3rem, 8vw, 6.5rem); font-weight: 900; line-height: 1.05; margin-bottom: 1.5rem; letter-spacing: -1px; color: #fff; text-shadow: 0 0 40px rgba(0,0,0,0.8); }
+  .entrance h1 span { display: block; font-family: var(--font-heading); font-weight: 800; font-size: clamp(1.2rem, 3.5vw, 2.5rem); letter-spacing: 12px; color: var(--primary); margin-top: 0.5rem; text-transform: uppercase; text-shadow: none; }
+  .entrance-pullquote { max-width: 750px; font-family: var(--font-serif); font-style: italic; font-size: clamp(1.15rem, 2.5vw, 1.45rem); color: var(--text-quote); line-height: 1.8; margin: 2rem auto; position: relative; padding: 0 1.5rem; }
+  .entrance-pullquote::before { content: "\201C"; position: absolute; top: -1.5rem; left: -1rem; font-size: 5rem; color: var(--border); font-family: var(--font-serif); }
+  .entrance-pullquote::after { content: "\201D"; position: absolute; bottom: -3.5rem; right: -1rem; font-size: 5rem; color: var(--border); font-family: var(--font-serif); }
+  .entrance-intro { max-width: 680px; font-size: 0.95rem; color: var(--text-dim); margin-top: 1rem; margin-bottom: 3.5rem; }
+  .scroll-indicator { font-family: var(--font-mono); font-size: 0.6rem; text-transform: uppercase; letter-spacing: 4px; color: var(--primary-dim); animation: bounce 2s infinite; cursor: pointer; text-decoration: none; }
+  @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-8px); } 60% { transform: translateY(-4px); } }
+
+  #verdict-summary { background: rgba(10, 10, 15, 0.95); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 3rem 2rem; z-index: 10; position: relative; }
+  .map-container { max-width: 1200px; margin: 0 auto; }
+  .map-title { font-family: var(--font-mono); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 4px; color: var(--primary-dim); margin-bottom: 1.5rem; text-align: center; }
+  .map-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.8rem; }
+  @media(max-width: 1200px) { .map-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media(max-width: 768px) { .map-grid { grid-template-columns: 1fr; } }
+  .map-node { background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); border-radius: 4px; padding: 1rem; transition: all 0.3s; }
+  .map-node:hover { border-color: var(--border); background: rgba(255,255,255,0.02); }
+  .map-num { font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700; color: var(--primary); margin-bottom: 0.3rem; }
+  .map-lbl { font-family: var(--font-heading); font-weight: 700; font-size: 0.82rem; color: #fff; margin-bottom: 0.4rem; }
+  .map-desc { font-size: 0.68rem; color: var(--text-dim); line-height: 1.5; }
+
+  .room { max-width: 1100px; margin: 0 auto; padding: 8rem 2rem; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; position: relative; }
+  .room-header { margin-bottom: 3.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; max-width: 800px; }
+  .room-num { font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 5px; color: var(--primary); margin-bottom: 0.5rem; }
+  .room-title { font-family: var(--font-serif); font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 900; color: #fff; line-height: 1.15; margin-bottom: 0.5rem; }
+  .room-meta { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-dim); letter-spacing: 1px; }
+  .room-intro { font-size: 1.05rem; line-height: 1.95; color: var(--text-dim); max-width: 820px; margin-bottom: 4rem; }
+  .room-intro strong { color: #fff; }
+
+  .exhibit-grid { display: grid; grid-template-columns: 1fr; gap: 2.5rem; }
+  .exhibit-grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+  @media(max-width: 768px) { .exhibit-grid-2col { grid-template-columns: 1fr; } }
+  .placard { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 2.5rem; box-shadow: 0 20px 40px rgba(0,0,0,0.4); position: relative; transition: all 0.3s ease; }
+  .placard:hover { box-shadow: 0 25px 50px rgba(0,0,0,0.6); }
+  .placard-meta { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 0.8rem; margin-bottom: 1.5rem; }
+  .placard-source { font-family: var(--font-mono); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 2px; color: var(--primary); }
+  .placard-tag { font-family: var(--font-mono); font-size: 0.58rem; text-transform: uppercase; letter-spacing: 1px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 0.2rem 0.6rem; border-radius: 3px; color: var(--text-dim); }
+  .placard-quote { font-family: var(--font-serif); font-size: 1.2rem; font-style: italic; color: var(--text-quote); line-height: 1.8; border-left: 3px solid var(--primary); padding-left: 1.5rem; margin: 1.5rem 0; }
+  .placard-translation { font-family: var(--font-sans); font-size: 0.85rem; color: var(--text-dim); margin-left: 1.7rem; margin-top: -1rem; margin-bottom: 1.5rem; font-style: italic; }
+  .placard-analysis { font-size: 0.9rem; color: var(--text-dim); line-height: 1.75; }
+  .placard-analysis strong { color: #fff; }
+
+  .exhibit-media-container { width: 100%; overflow: hidden; border-radius: 6px; border: 1px solid var(--border); background: rgba(0, 0, 0, 0.4); margin: 1.2rem 0; display: flex; justify-content: center; align-items: center; box-shadow: inset 0 0 20px rgba(0,0,0,0.8); padding: 10px; }
+  .exhibit-media { max-width: 100%; max-height: 480px; object-fit: contain; border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 10px 30px rgba(0,0,0,0.6); border-radius: 4px; transition: transform 0.5s ease; }
+  .exhibit-media:hover { transform: scale(1.02); }
+
+  .timeline-spine { position: relative; padding-left: 3rem; margin: 2rem 0; }
+  .timeline-spine::before { content: ""; position: absolute; left: 0.75rem; top: 0; bottom: 0; width: 2px; background: linear-gradient(180deg, var(--primary) 0%, rgba(255,255,255,0.02) 100%); }
+  .timeline-node { position: relative; margin-bottom: 2rem; }
+  .timeline-node::before { content: ""; position: absolute; left: -2.62rem; top: 0.4rem; width: 14px; height: 14px; border-radius: 50%; background: var(--bg-dark); border: 3px solid var(--primary); transition: all 0.3s; }
+  .timeline-node:hover::before { background: var(--primary); box-shadow: 0 0 10px var(--primary); }
+  .timeline-date { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; color: var(--primary); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 0.5rem; }
+  .timeline-content { background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.03); border-radius: 6px; padding: 1.2rem; max-width: 850px; }
+  .timeline-heading { font-family: var(--font-heading); font-weight: 700; font-size: 0.95rem; color: #fff; margin-bottom: 0.4rem; }
+  .timeline-desc { font-size: 0.85rem; color: var(--text-dim); line-height: 1.7; }
+
+  .curtain-container { position: relative; overflow: hidden; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-card); min-height: 280px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+  .curtain-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #0d0d12; transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1); z-index: 2; padding: 2.2rem; display: flex; flex-direction: column; justify-content: space-between; border-radius: 8px; }
+  .curtain-container.scanned .curtain-overlay { transform: translateX(-102%); }
+  .curtain-underlay { padding: 2.2rem; background: radial-gradient(circle at top right, rgba(139, 0, 0, 0.12) 0%, transparent 80%), #140808; min-height: 280px; display: flex; flex-direction: column; justify-content: space-between; z-index: 1; position: relative; }
+  .curtain-underlay::after { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(rgba(139,0,0,0) 50%, rgba(139,0,0,0.15) 50%), linear-gradient(90deg, rgba(139,0,0,0.06), rgba(139,0,0,0.02)); background-size: 100% 4px, 6px 100%; pointer-events: none; }
+  .scan-btn { align-self: flex-start; margin-top: 1rem; padding: 0.5rem 1.2rem; border: 1px solid var(--primary); background: var(--primary-glow); color: var(--primary); font-family: var(--font-mono); font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; border-radius: 4px; cursor: pointer; transition: all 0.3s; }
+  .scan-btn:hover { background: var(--primary); color: var(--bg-dark); box-shadow: 0 0 15px var(--primary); }
+  .curtain-label { font-family: var(--font-mono); font-size: 0.58rem; text-transform: uppercase; letter-spacing: 3px; padding: 0.2rem 0.5rem; border-radius: 3px; align-self: flex-start; }
+  .label-stated { background: rgba(212, 175, 55, 0.08); color: var(--primary); border: 1px solid rgba(212, 175, 55, 0.2); }
+  .label-forensic { background: rgba(139, 0, 0, 0.12); color: #e07060; border: 1px solid rgba(139, 0, 0, 0.3); }
+
+  .blueprint-table { width: 100%; border-collapse: collapse; margin: 2rem 0; font-size: 0.85rem; }
+  .blueprint-table th { font-family: var(--font-mono); font-size: 0.62rem; text-transform: uppercase; letter-spacing: 2px; color: var(--primary-dim); padding: 0.8rem 1rem; text-align: left; border-bottom: 2px solid var(--border); }
+  .blueprint-table td { padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.03); vertical-align: middle; }
+  .blueprint-table tr:hover td { background: rgba(255,255,255,0.01); }
+  .bar-container { width: 100%; height: 8px; background: rgba(255,255,255,0.03); border-radius: 4px; overflow: hidden; position: relative; }
+  .bar-fill { height: 100%; background: var(--primary); border-radius: 4px; transition: width 1s ease-in-out; }
+  .kw-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.8rem; margin: 2rem 0; }
+  .kw-chip { background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.04); border-radius: 4px; padding: 0.8rem; text-align: center; font-family: var(--font-mono); font-size: 0.72rem; font-weight: 500; color: var(--text-dim); cursor: pointer; transition: all 0.3s; }
+  .kw-chip:hover, .kw-chip.active { border-color: var(--primary); color: var(--primary); background: var(--primary-glow); box-shadow: 0 0 10px rgba(212, 175, 55, 0.05); }
+  .kw-display-quote { background: rgba(0,0,0,0.3); border-left: 3px solid var(--primary); padding: 1.5rem; border-radius: 0 8px 8px 0; font-family: var(--font-serif); font-size: 1.05rem; font-style: italic; color: var(--text-quote); min-height: 100px; display: flex; align-items: center; transition: opacity 0.3s; }
+
+  .dashboard-container { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.5); margin: 2rem 0; }
+  .dashboard-tabs { display: flex; flex-wrap: wrap; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.3); }
+  .dashboard-tab-btn { padding: 0.7rem 1.2rem; background: none; border: none; border-bottom: 2px solid transparent; font-family: var(--font-mono); font-size: 0.62rem; color: var(--text-dim); cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s; white-space: nowrap; }
+  .dashboard-tab-btn:hover { color: var(--primary); }
+  .dashboard-tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); background: rgba(212,175,55,0.04); }
+  .dashboard-panel { display: none; padding: 2rem; }
+  .dashboard-panel.active { display: block; }
+  .dashboard-metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+  .dashboard-metric { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.04); border-radius: 6px; padding: 1.2rem; text-align: center; }
+  .d-metric-val { font-family: var(--font-heading); font-size: 1.8rem; font-weight: 800; color: var(--primary); margin-bottom: 0.3rem; }
+  .d-metric-val.blood { color: var(--accent-red); }
+  .d-metric-val.amber { color: var(--accent-amber); }
+  .d-metric-lbl { font-family: var(--font-mono); font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); }
+  .dashboard-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; margin: 1.5rem 0; }
+  .dashboard-table th { font-family: var(--font-mono); font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--primary-dim); padding: 0.6rem 0.8rem; text-align: left; border-bottom: 2px solid var(--border); }
+  .dashboard-table td { padding: 0.6rem 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.03); }
+  .dashboard-table tr:hover td { background: rgba(255,255,255,0.01); }
+
+  .enabler-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(460px, 1fr)); gap: 2rem; margin: 2rem 0; }
+  @media(max-width: 600px) { .enabler-grid { grid-template-columns: 1fr; } }
+  .enabler-card { background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 8px; padding: 2rem; transition: all 0.3s; }
+  .enabler-card:hover { border-color: var(--primary); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+  .enabler-card-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+  .enabler-initials { width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--font-heading); font-weight: 800; font-size: 1.2rem; flex-shrink: 0; }
+  .enabler-name { font-family: var(--font-heading); font-weight: 700; font-size: 1rem; color: #fff; }
+  .enabler-role { font-family: var(--font-mono); font-size: 0.62rem; text-transform: uppercase; letter-spacing: 1px; }
+  .enabler-quote-list { display: flex; flex-direction: column; gap: 1rem; }
+  .enabler-quote { background: rgba(0,0,0,0.3); border-left: 3px solid var(--accent-red); padding: 0.8rem 1rem; border-radius: 0 4px 4px 0; font-size: 0.82rem; line-height: 1.6; }
+  .enabler-quote .who { font-family: var(--font-mono); font-size: 0.58rem; text-transform: uppercase; letter-spacing: 1px; color: var(--primary); margin-bottom: 0.3rem; }
+  .enabler-quote .msg { font-family: var(--font-serif); font-style: italic; color: var(--text-quote); }
+  .enabler-quote .date-tag { font-family: var(--font-mono); font-size: 0.55rem; color: var(--text-dim); margin-top: 0.3rem; }
+
+  .ledger-table { width: 100%; border-collapse: collapse; margin-top: 1.5rem; font-size: 0.8rem; }
+  .ledger-table td { padding: 0.7rem 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.03); }
+  .ledger-table td:first-child { font-family: var(--font-mono); color: var(--primary); width: 25%; }
+
+  .exhibit-section-title { font-family: var(--font-serif); font-size: 1.8rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; letter-spacing: 0.5px; border-left: 3px solid var(--primary); padding-left: 1rem; }
+  .exhibit-section-desc { font-size: 0.92rem; color: var(--text-dim); margin-bottom: 2rem; line-height: 1.7; max-width: 800px; }
+
+  .guilt-key { display: flex; gap: 1.5rem; flex-wrap: wrap; margin: 2rem 0; padding: 1.5rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.04); border-radius: 8px; }
+  .guilt-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.7rem; }
+  .guilt-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  .guilt-gold { background: #d4af37; box-shadow: 0 0 6px #d4af37; }
+  .guilt-copper { background: #b87333; box-shadow: 0 0 6px #b87333; }
+  .guilt-amber { background: #d97706; box-shadow: 0 0 6px #d97706; }
+  .guilt-blood { background: #8b0000; box-shadow: 0 0 6px #8b0000; }
+
+  .museum-footer { text-align: center; padding: 6rem 2rem; background: #050507; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 0.75rem; line-height: 2; }
+  .museum-footer a { color: var(--primary); text-decoration: none; }
+
+  @media(max-width: 768px) { .room { padding: 4rem 1.5rem; } .placard { padding: 1.5rem; } .dashboard-tab-btn { padding: 0.5rem 0.8rem; font-size: 0.58rem; } .enabler-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body data-active-room="hook">
+
+<div id="metadata-ledger">
+  <div class="ledger-title">Forensic Ledger v5</div>
+  <div class="ledger-metric"><span class="ledger-lbl">Msg Scope</span><span class="ledger-val">248,369</span></div>
+  <div class="ledger-metric"><span class="ledger-lbl">Financial Entries</span><span class="ledger-val">2,523</span></div>
+  <div class="ledger-metric"><span class="ledger-lbl">PHP Discussed</span><span class="ledger-val">&pesos;21.5M</span></div>
+  <div class="ledger-metric"><span class="ledger-lbl">Ben Sent</span><span class="ledger-val">&pesos;3.49M</span></div>
+  <div class="ledger-metric"><span class="ledger-lbl">Data Sources</span><span class="ledger-val">53 banks</span></div>
+  <div class="ledger-metric" style="border-top:1px dashed var(--border);padding-top:0.4rem;margin-top:0.2rem;">
+    <span class="ledger-lbl" style="color:var(--primary)">System Status</span>
+    <span class="ledger-val" style="color:var(--primary);font-size:0.75rem">CONCLUSIVE</span>
+  </div>
+</div>
+
+<div id="cast-panel">
+  <div class="cast-panel-header"><div class="cast-panel-title">Dramatis Personae</div><button class="cast-close" onclick="toggleCast()">&times;</button></div>
+  <div class="cast-list">
+    <div class="cast-card"><div class="cast-header"><div class="cast-avatar">BY</div><div class="cast-meta"><div class="cast-name">Benjamin Yeo</div><div class="cast-role">The Devoted / The Victim</div></div></div><div class="cast-desc">Malaysian national who survived scam captivity in Cambodia, sacrificed his health and capital, and discovered his devotion had been monetized by a coordinated network.</div><span class="cast-grade grade-gold">Grade: VICTIM</span></div>
+    <div class="cast-card"><div class="cast-header"><img class="cast-avatar" src="unnamed (3).png" alt="Moira"><div class="cast-meta"><div class="cast-name">Moira Magnificat Yeo</div><div class="cast-role">The Architect / "Best Actress"</div></div></div><div class="cast-desc">BPO employee and mother managing a double life. Top advice-giver in a network dedicated to relationship siphoning, while maintaining concurrent partners and masking flights abroad.</div><span class="cast-grade grade-blood">Grade: ARCHITECT</span></div>
+    <div class="cast-card"><div class="cast-header"><div class="cast-avatar">AA</div><div class="cast-meta"><div class="cast-name">Albert Antonio</div><div class="cast-role">The Godfather / Silent Enabler</div></div></div><div class="cast-desc">Knew about Moira's abroad plan 298 days before Benjamin. Maintained 399 msgs with Ben while knowing everything. When children were hungry with "one eggplant," Ben had to beg him for &pesos;1,500.</div><span class="cast-grade grade-blood">Grade: ENABLER</span></div>
+    <div class="cast-card"><div class="cast-header"><div class="cast-avatar">ZG</div><div class="cast-meta"><div class="cast-name">Zia Galeon</div><div class="cast-role">The Doctor / Contradicting Confidante</div></div></div><div class="cast-desc">Knew about Malta flight 6 days before departure. Offered to house the children. Lent money to extend Moira's stay abroad. Told Ben she was "shocked" on Dec 26, 2025 &mdash; a proven lie.</div><span class="cast-grade grade-blood">Grade: ENABLER</span></div>
+    <div class="cast-card"><div class="cast-header"><div class="cast-avatar">HGA</div><div class="cast-meta"><div class="cast-name">Hilda Guzman Antonio</div><div class="cast-role">The Godmother / Logistics Coordinator</div></div></div><div class="cast-desc">Watched Moira pack. Dispatched the nanny. Knew flight time. Post-departure: kids had no food/soap. Refused return ticket money.</div><span class="cast-grade grade-blood">Grade: ENABLER</span></div>
+    <div class="cast-card"><div class="cast-header"><div class="cast-avatar">AGA</div><div class="cast-meta"><div class="cast-name">Alaine G Antonio-Aquino</div><div class="cast-role">The Money Conduit / Primary Confidante</div></div></div><div class="cast-desc">35,023 messages &mdash; highest volume contact. Pushed for money, instructed manipulation ("Dramahan mo haha"), served as money relay.</div><span class="cast-grade grade-blood">Grade: ENABLER</span></div>
+    <div class="cast-card"><div class="cast-header"><img class="cast-avatar" src="Diao Trisha.jpg" alt="Diao Trisha"><div class="cast-meta"><div class="cast-name">Diao Trisha</div><div class="cast-role">Affair Partner</div></div></div><div class="cast-desc">Identified in Moira's affair logs.</div></div>
+    <div class="cast-card"><div class="cast-header"><img class="cast-avatar" src="Guinto Ruby Diane.jpg" alt="Guinto Ruby Diane"><div class="cast-meta"><div class="cast-name">Guinto Ruby Diane</div><div class="cast-role">Affair Partner</div></div></div><div class="cast-desc">Identified in the adultery files.</div></div>
+    <div class="cast-card"><div class="cast-header"><img class="cast-avatar" src="Reyes Edilbert.jpg" alt="Reyes Edilbert"><div class="cast-meta"><div class="cast-name">Reyes Edilbert</div><div class="cast-role">Malta Colleague</div></div></div><div class="cast-desc">Malta BPO colleague who facilitated Moira's silent relocation.</div></div>
+    <div class="cast-card"><div class="cast-header"><img class="cast-avatar" src="Vilanueva Sayo.jpg" alt="Vilanueva Sayo"><div class="cast-meta"><div class="cast-name">Vilanueva Sayo</div><div class="cast-role">Malta Colleague</div></div></div><div class="cast-desc">Coordinated logistics, Bolt rides, and accommodation for Moira's covert exit.</div></div>
+  </div>
+</div>
+
+<nav class="nav-ribbon">
+  <a href="#hook" class="nav-brand">YEO v. YEO</a>
+  <div class="nav-links">
+    <button class="nav-btn active" data-target="hook" onclick="scrollToId('hook')">The Hook</button>
+    <button class="nav-btn" data-target="room1" onclick="scrollToId('room1')">I &middot; Sanctuary</button>
+    <button class="nav-btn" data-target="room2" onclick="scrollToId('room2')">II &middot; Crucible</button>
+    <button class="nav-btn" data-target="room3" onclick="scrollToId('room3')">III &middot; Network</button>
+    <button class="nav-btn" data-target="room4" onclick="scrollToId('room4')">IV &middot; Enablers</button>
+    <button class="nav-btn" data-target="room5" onclick="scrollToId('room5')">V &middot; Abandonment</button>
+    <button class="nav-btn" data-target="room6" style="color:var(--accent-red);" onclick="scrollToId('room6')">VI &middot; Autopsy</button>
+  </div>
+  <button class="cast-trigger" onclick="toggleCast()">Cast of Characters</button>
+</nav>
+
+<section class="entrance" id="hook">
+  <div class="entrance-label">Exhibition File No. 2026-0615-V5 &middot; Supreme Court of Public Record</div>
+  <h1>THE COST OF<br><span>Believing Her</span></h1>
+  <p class="entrance-pullquote">"Fraud does not arrive dressed as cruelty.<br>It arrives dressed as helplessness, wrapped in the voice of someone who needs you."</p>
+  <p class="entrance-intro">This museum is a deliberate psychological descent. It begins with the warmth of devotion, moves through the fire of sacrifice, and ends in the cold arithmetic of betrayal. Six rooms. Four enablers. Two children abandoned. One man bled dry. By the time you reach the final exhibit, the conclusion will not feel clinical &mdash; it will feel inevitable.</p>
+  <a href="#verdict-summary" class="scroll-indicator">Begin the Descent &darr;</a>
+</section>
+
+<section id="verdict-summary">
+  <div class="map-container">
+    <div class="map-title">The Path of Realization</div>
+    <div class="map-grid">
+      <div class="map-node"><div class="map-num">I</div><div class="map-lbl">The Sanctuary</div><div class="map-desc">Love story facade, commitment traps, beautiful architecture of deception.</div></div>
+      <div class="map-node"><div class="map-num">II</div><div class="map-lbl">The Crucible</div><div class="map-desc">Cambodia captivity, ransom, survival, relentless sacrifice.</div></div>
+      <div class="map-node"><div class="map-num">III</div><div class="map-lbl">The Network</div><div class="map-desc">ATM strategy, money conduits, "dramahan" coaching.</div></div>
+      <div class="map-node"><div class="map-num">IV</div><div class="map-lbl">The Enablers</div><div class="map-desc">Four who knew and said nothing for 298 days.</div></div>
+      <div class="map-node"><div class="map-num">V</div><div class="map-lbl">The Abandonment</div><div class="map-desc">Malta departure, "one eggplant," collective silence.</div></div>
+      <div class="map-node"><div class="map-num">VI</div><div class="map-lbl">The Autopsy</div><div class="map-desc">&pesos;21.5M, 298 days, 248K msgs, 4 who could have stopped it.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ROOM I: THE SANCTUARY -->
+<section class="room" id="room1">
+  <div class="room-header"><div class="room-num">Phase I &middot; Gold Atmosphere &middot; Intrigue &amp; Illusion</div><div class="room-title">The Sanctuary of Devotion</div><div class="room-meta">Exhibit 1-A through 1-E &middot; Commitment Trap Pattern: 47+ documented instances</div></div>
+  <p class="room-intro">Every fraud begins with a story. This one opens in the quiet shelter of hope &mdash; a couple separated by geography, a woman who speaks in the soft cadences of vulnerability, and a man who believes his purpose is to protect. In these early months, Moira&rsquo;s voice is that of a devoted partner, utterly dependent on Benjamin&rsquo;s strength. But beneath the tenderness, a <strong>mechanical pattern</strong> was already running: doubt, reassurance, extraction, repeat.</p>
+  <div class="exhibit-grid">
+    <div class="placard" style="border-color:#d4af37;background:linear-gradient(135deg,rgba(212,175,55,0.06) 0%,rgba(14,14,20,0.98) 60%);box-shadow:0 0 40px rgba(212,175,55,0.12),0 20px 40px rgba(0,0,0,0.5);">
+      <div class="placard-meta"><span class="placard-source" style="color:#d4af37;font-size:0.8rem;letter-spacing:3px;">&#9888; INTERCEPT LOG &middot; Commitment Trap Pattern</span><span class="placard-tag" style="background:rgba(212,175,55,0.15);border-color:rgba(212,175,55,0.4);color:#d4af37;">&#128172; Chat Evidence</span></div>
+      <div style="background:linear-gradient(90deg,rgba(212,175,55,0.18) 0%,rgba(212,175,55,0.04) 100%);border-left:4px solid #d4af37;border-radius:4px;padding:1rem 1.2rem;margin-bottom:1.5rem;display:flex;align-items:flex-start;gap:0.8rem;">
+        <span style="font-size:1.4rem;line-height:1;">&#128204;</span><div><div style="font-family:var(--font-mono);font-size:0.65rem;text-transform:uppercase;letter-spacing:2px;color:#d4af37;margin-bottom:0.3rem;">Critical Pattern &mdash; 47+ Instances</div><div style="font-size:0.88rem;color:#e2e8f0;line-height:1.6;">Moira repeatedly seeks explicit verbal confirmation from Benjamin that they are in a committed relationship &mdash; <strong style="color:#d4af37;">not because she doubts it, but because the confirmation resets the emotional clock</strong>, restores moral leverage, and triggers a new cycle of financial dependency appeals.</div></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:0.8rem;margin-bottom:1.5rem;">
+        <div style="display:flex;justify-content:flex-start;"><div style="max-width:78%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:0 14px 14px 14px;padding:0.9rem 1.1rem;"><div style="font-family:var(--font-mono);font-size:0.58rem;color:#d4af37;letter-spacing:1px;margin-bottom:0.4rem;text-transform:uppercase;">Moira</div><div style="font-family:var(--font-serif);font-style:italic;font-size:1rem;color:#ebdca9;line-height:1.7;">"I just need to know... are we really together? Like officially? I need to hear it from you. Especially with everything we've been through..."</div><div style="font-size:0.62rem;color:#64748b;margin-top:0.5rem;text-align:right;">&#10003;&#10003; Seen</div></div></div>
+        <div style="display:flex;justify-content:flex-end;"><div style="max-width:72%;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.2);border-radius:14px 0 14px 14px;padding:0.9rem 1.1rem;"><div style="font-family:var(--font-mono);font-size:0.58rem;color:#8c7023;letter-spacing:1px;margin-bottom:0.4rem;text-transform:uppercase;">Benjamin</div><div style="font-size:0.95rem;color:#e2e8f0;line-height:1.7;">Of course we are. You are my wife. I am not going anywhere. I love you."</div><div style="font-size:0.62rem;color:#64748b;margin-top:0.5rem;text-align:right;">&#10003;&#10003; Seen</div></div></div>
+        <div style="display:flex;justify-content:flex-start;"><div style="max-width:78%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:0 14px 14px 14px;padding:0.9rem 1.1rem;"><div style="font-family:var(--font-mono);font-size:0.58rem;color:#d4af37;letter-spacing:1px;margin-bottom:0.4rem;text-transform:uppercase;">Moira</div><div style="font-family:var(--font-serif);font-style:italic;font-size:1rem;color:#ebdca9;line-height:1.7;">"I just feel so alone here... I don't want to keep depending on you if you're not sure about us. The kids need you. I need you. But if you can't commit, just tell me now so I stop hoping..."</div><div style="font-size:0.62rem;color:#64748b;margin-top:0.5rem;text-align:right;">&#10003;&#10003; Seen</div></div></div>
+        <div style="display:flex;justify-content:flex-end;"><div style="max-width:72%;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.2);border-radius:14px 0 14px 14px;padding:0.9rem 1.1rem;"><div style="font-family:var(--font-mono);font-size:0.58rem;color:#8c7023;letter-spacing:1px;margin-bottom:0.4rem;text-transform:uppercase;">Benjamin</div><div style="font-size:0.95rem;color:#e2e8f0;line-height:1.7;">Stop saying that. I am committed. I will send you money tomorrow. Just hold on."</div><div style="font-size:0.62rem;color:#64748b;margin-top:0.5rem;text-align:right;">&#10003;&#10003; Seen</div></div></div>
+      </div>
+      <div style="border-top:1px solid rgba(212,175,55,0.15);padding-top:1.2rem;">
+        <div style="font-family:var(--font-mono);font-size:0.65rem;text-transform:uppercase;letter-spacing:2px;color:#d4af37;margin-bottom:0.7rem;">&#128202; Forensic Pattern Analysis</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0.8rem;">
+          <div style="background:rgba(0,0,0,0.3);border-radius:6px;padding:0.9rem;border-left:3px solid #d4af37;"><div style="font-size:0.7rem;font-weight:700;color:#fff;margin-bottom:0.3rem;">The Trigger</div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.5;">Feigned doubt about commitment &mdash; introduced precisely when Benjamin's financial contributions slowed, or just after she received funds. Not insecurity. <em>Strategy.</em></div></div>
+          <div style="background:rgba(0,0,0,0.3);border-radius:6px;padding:0.9rem;border-left:3px solid #b87333;"><div style="font-size:0.7rem;font-weight:700;color:#fff;margin-bottom:0.3rem;">The Mechanism</div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.5;">Forces Benjamin to re-declare love and commitment &mdash; which he does immediately &mdash; because the alternative (her "losing hope") is emotionally catastrophic post-Cambodia.</div></div>
+          <div style="background:rgba(0,0,0,0.3);border-radius:6px;padding:0.9rem;border-left:3px solid #8b0000;"><div style="font-size:0.7rem;font-weight:700;color:#fff;margin-bottom:0.3rem;">The Extraction</div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.5;">Every confirmation of commitment was immediately followed by a financial request. The pattern is not occasional &mdash; it is <strong style="color:#fff;">structural</strong>.</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="placard"><div class="placard-meta"><span class="placard-source">Forensic Artifact &middot; Portrait File</span><span class="placard-tag">The Martyr Facade</span></div><div class="exhibit-media-container"><img class="exhibit-media" src="Moira_Portrait_Jan2026.jpg" alt="Moira Portrait Jan 2026"></div><div class="placard-analysis"><strong>The Portrait of Devotion:</strong> Captured January 2026. The soft lighting, the cross held prominently, the gentle maternal gaze &mdash; this was the visual architecture of the fraud. It established the moral authority that made her appeals for emergency funds <strong style="color:#d4af37;">unquestionable.</strong></div></div>
+    <div class="placard"><div class="placard-meta"><span class="placard-source">Moira &middot; December 5, 2025</span><span class="placard-tag">The Pleading Voice</span></div><div class="placard-quote">"I'm really worried about the finances... My electricity and water is going to get cut by tomorrow... the children ran out of money for food, daily needs, also the house rental."</div><div class="placard-analysis">This is the hook. It is immediate, physical, and unarguable. A household without basic utilities is a moral emergency. For Benjamin, thousands of miles away, this creates a trap: <strong>to hesitate is to be cruel.</strong> The appeal opens the door to uncoordinated extraction &mdash; and closes the door on any right to ask where the money went.</div></div>
+    <div class="placard" style="border-color:#b87333;"><div class="placard-meta"><span class="placard-source" style="color:#b87333;">Moira to Hasitha &middot; Self-Description</span><span class="placard-tag" style="border-color:rgba(184,115,51,0.4);color:#b87333;">&#9888; Self-Incriminating</span></div><div class="placard-quote" style="border-left-color:#b87333;">"So don't blame me if im too much sweet and loving person. Best actress awardee to be exact."</div><div class="placard-analysis">Moira, in her own words, to another man. She <strong>knows</strong> what she is doing. The sweetness is a role. The devotion is a performance. She literally calls herself the "Best Actress" &mdash; and the evidence proves she earned that title.</div></div>
+    <div class="placard" style="border-color:#b87333;">
+      <div class="placard-meta"><span class="placard-source" style="color:#b87333;">The Mirror Test &middot; Two Audiences, Two Realities</span><span class="placard-tag" style="border-color:rgba(184,115,51,0.4);color:#b87333;">&#9888; Contradiction Analysis</span></div>
+      <div class="exhibit-grid-2col">
+        <div style="background:rgba(212,175,55,0.04);border:1px solid rgba(212,175,55,0.15);border-radius:6px;padding:1.2rem;">
+          <div style="font-family:var(--font-mono);font-size:0.62rem;text-transform:uppercase;letter-spacing:2px;color:#d4af37;margin-bottom:1rem;">TO BENJAMIN &mdash; The Helpless Wife</div>
+          <div style="font-family:var(--font-serif);font-style:italic;font-size:0.95rem;color:var(--text-quote);line-height:1.7;">"I just feel so alone here... I don't want to keep depending on you if you're not sure about us. The kids need you. I need you."</div>
+          <div style="font-size:0.75rem;color:var(--text-dim);margin-top:0.8rem;">Persona: Vulnerable, dependent, abandoned. Every word designed to trigger Benjamin's protector instinct. The children are invoked as emotional currency.</div>
+        </div>
+        <div style="background:rgba(139,0,0,0.04);border:1px solid rgba(139,0,0,0.2);border-radius:6px;padding:1.2rem;">
+          <div style="font-family:var(--font-mono);font-size:0.62rem;text-transform:uppercase;letter-spacing:2px;color:#e07060;margin-bottom:1rem;">TO HASITHA &mdash; The Confident Woman</div>
+          <div style="font-family:var(--font-serif);font-style:italic;font-size:0.95rem;color:#e07060;line-height:1.7;">"So don't blame me if im too much sweet and loving person. Best actress awardee to be exact."</div>
+          <div style="font-size:0.75rem;color:var(--text-dim);margin-top:0.8rem;">Persona: Confident, self-aware, proud of her performance. She literally boasts about her ability to perform sweetness. This is not contradiction &mdash; this is <strong style="color:#e07060;">confession.</strong></div>
+        </div>
+      </div>
+      <div style="margin-top:1.5rem;padding-top:1.2rem;border-top:1px solid rgba(255,255,255,0.06);">
+        <div style="font-family:var(--font-mono);font-size:0.65rem;text-transform:uppercase;letter-spacing:2px;color:#b87333;margin-bottom:0.7rem;">Forensic Conclusion</div>
+        <div style="font-size:0.88rem;color:var(--text-dim);line-height:1.7;">The gap between these two statements is the <strong>entire fraud</strong>. To Benjamin: "I need you, I'm helpless." To Hasitha: "I'm the Best Actress." She knew the performance was a performance. She was <strong>proud</strong> of it. This is not a woman caught in circumstances. This is a woman who <strong>scripted</strong> her circumstances.</div>
+      </div>
+    </div>
+    <div class="placard" style="border-color:#d4af37;">
+      <div class="placard-meta"><span class="placard-source" style="color:#d4af37;">The Financial Floodgates &middot; Pattern Sequence Map</span><span class="placard-tag" style="background:rgba(212,175,55,0.15);border-color:rgba(212,175,55,0.4);color:#d4af37;">GOLD: Pattern Confirmed</span></div>
+      <div style="font-family:var(--font-serif);font-size:1.05rem;color:var(--text-quote);line-height:1.8;margin-bottom:1.5rem;">The commitment trap was never about love. It was a <strong>financial priming mechanism</strong>. Every single instance of Moira questioning the relationship was followed &mdash; usually within the same conversation thread &mdash; by a request for money. The sequence was mechanical:</div>
+      <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;justify-content:center;margin-bottom:2rem;">
+        <div style="background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.2);border-radius:20px;padding:0.5rem 1rem;font-family:var(--font-mono);font-size:0.7rem;color:#d4af37;">Doubt</div>
+        <span style="color:var(--text-dim);font-size:1.2rem;">&rarr;</span>
+        <div style="background:rgba(184,115,51,0.08);border:1px solid rgba(184,115,51,0.2);border-radius:20px;padding:0.5rem 1rem;font-family:var(--font-mono);font-size:0.7rem;color:#b87333;">Reassurance</div>
+        <span style="color:var(--text-dim);font-size:1.2rem;">&rarr;</span>
+        <div style="background:rgba(217,119,6,0.08);border:1px solid rgba(217,119,6,0.2);border-radius:20px;padding:0.5rem 1rem;font-family:var(--font-mono);font-size:0.7rem;color:#d97706;">Guilt</div>
+        <span style="color:var(--text-dim);font-size:1.2rem;">&rarr;</span>
+        <div style="background:rgba(139,0,0,0.12);border:1px solid rgba(139,0,0,0.3);border-radius:20px;padding:0.5rem 1rem;font-family:var(--font-mono);font-size:0.7rem;color:#e07060;">Extraction</div>
+      </div>
+      <table class="blueprint-table">
+        <thead><tr><th>Phase</th><th>Moira's Action</th><th>Benjamin's Response</th><th>Financial Result</th></tr></thead>
+        <tbody>
+          <tr><td style="color:#d4af37;font-weight:700;">1. DOUBT</td><td>"Are we really together?"</td><td>Emotional panic &mdash; must prove love</td><td>Opens negotiation frame</td></tr>
+          <tr><td style="color:#b87333;font-weight:700;">2. REASSURANCE</td><td>Receives declaration of commitment</td><td>"You are my wife. I love you."</td><td>Moral debt created</td></tr>
+          <tr><td style="color:#d97706;font-weight:700;">3. GUILT</td><td>"The children need you... I feel alone"</td><td>Protector instinct activated</td><td>Urgency manufactured</td></tr>
+          <tr><td style="color:#8b0000;font-weight:700;">4. EXTRACTION</td><td>"Electricity getting cut... no food money"</td><td>Sends money immediately</td><td style="color:#8b0000;">Funds transferred</td></tr>
+        </tbody>
+      </table>
+      <div style="font-size:0.82rem;color:var(--text-dim);margin-top:1.2rem;line-height:1.7;"><strong style="color:#fff;">This 4-step sequence repeated 47+ times</strong> across a 3-year period. The consistency eliminates any possibility of coincidence. This is a <strong>trained, refined, deliberate extraction protocol</strong> disguised as relationship insecurity. Benjamin was not in a marriage. He was in a <strong>subscription service</strong> where the price of continued membership was proof of love &mdash; paid in pesos.</div>
+    </div>
+    <div class="placard" style="border-color:#d4af37;">
+      <div class="placard-meta"><span class="placard-source" style="color:#d4af37;">Evidence Grading &middot; Room I Summary</span><span class="placard-tag" style="background:rgba(212,175,55,0.15);border-color:rgba(212,175,55,0.4);color:#d4af37;">VERDICT: Pattern Established</span></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;">
+        <div style="text-align:center;padding:1rem;background:rgba(0,0,0,0.2);border-radius:6px;"><div style="font-family:var(--font-heading);font-size:2rem;font-weight:800;color:#d4af37;">47+</div><div style="font-size:0.7rem;color:var(--text-dim);">Commitment Trap Instances</div><div style="font-size:0.6rem;color:#d4af37;margin-top:0.3rem;">GOLD</div></div>
+        <div style="text-align:center;padding:1rem;background:rgba(0,0,0,0.2);border-radius:6px;"><div style="font-family:var(--font-heading);font-size:2rem;font-weight:800;color:#b87333;">82+</div><div style="font-size:0.7rem;color:var(--text-dim);">Financial Appeals</div><div style="font-size:0.6rem;color:#b87333;margin-top:0.3rem;">COPPER</div></div>
+        <div style="text-align:center;padding:1rem;background:rgba(0,0,0,0.2);border-radius:6px;"><div style="font-family:var(--font-heading);font-size:2rem;font-weight:800;color:#d97706;">11</div><div style="font-size:0.7rem;color:var(--text-dim);">Distinct Personas</div><div style="font-size:0.6rem;color:#d97706;margin-top:0.3rem;">AMBER</div></div>
+        <div style="text-align:center;padding:1rem;background:rgba(0,0,0,0.2);border-radius:6px;"><div style="font-family:var(--font-heading);font-size:2rem;font-weight:800;color:#8b0000;">1</div><div style="font-size:0.7rem;color:var(--text-dim);">Self-Confession</div><div style="font-size:0.6rem;color:#8b0000;margin-top:0.3rem;">BLOOD</div></div>
+      </div>
+    </div>
+    <!-- NEW: Concealment During Social Life -->
+    <div class="placard" style="border-color:#8b0000;background:linear-gradient(135deg,rgba(139,0,0,0.08) 0%,rgba(14,14,20,0.98) 60%);box-shadow:0 0 40px rgba(139,0,0,0.1);">
+      <div class="placard-meta">
+        <span class="placard-source" style="color:#e07060;font-size:0.8rem;letter-spacing:3px;">&#9888;&nbsp; INTERCEPT LOG &middot; Concealment While Partying</span>
+        <span class="placard-tag" style="background:rgba(139,0,0,0.2);border-color:rgba(139,0,0,0.4);color:#e07060;">&#9888; BLOOD RED</span>
+      </div>
+      <div style="background:linear-gradient(90deg,rgba(139,0,0,0.18) 0%,rgba(139,0,0,0.04) 100%);border-left:4px solid #8b0000;border-radius:4px;padding:1rem 1.2rem;margin-bottom:1.5rem;">
+        <div style="font-family:var(--font-mono);font-size:0.65rem;text-transform:uppercase;letter-spacing:2px;color:#e07060;margin-bottom:0.3rem;">The Double Life Protocol</div>
+        <div style="font-size:0.88rem;color:#e2e8f0;line-height:1.6;">Moira maintained a rigorous <strong style="color:#e07060;">concealment protocol</strong> around her social life. While Benjamin believed she was a struggling mother with no time or money for herself, she was actively managing a parallel reality &mdash; one filled with drinking sessions, staycations, group outings, and parties. The protocol required everyone in her orbit to <strong style="color:#e07060;">never mention these activities to Ben.</strong></div>
+      </div>
+      <div class="placard-quote" style="border-left-color:#8b0000;">"Di Alam Ni Ben na gumagastos ako"</div>
+      <div class="placard-translation">&mdash; Moira, December 17, 2024. Translation: <em>"Ben doesn't know I'm spending."</em> This single sentence is an admission that her spending was hidden from her husband by design.</div>
+      <div class="placard-quote" style="border-left-color:#8b0000;">"Hindi alam ni Ben na nagbigay ako. Ayaw na nga niya ako makipag communicate sakanya. &#x1F602; Hindi ko lang talaga matiis kids at si ninang. &#x1F602;"</div>
+      <div class="placard-translation">&mdash; Moira to Alaine, December 25, 2024. Translation: <em>"Ben doesn't know I gave money. He doesn't even want me communicating with them anymore. &#x1F602; I just can't resist the kids and ninang. &#x1F602;"</em> She was laughing about concealing her actions from Ben &mdash; on Christmas Day. The laughing emojis are not subtext. They are the text.</div>
+      <div class="placard-analysis">
+        <strong style="color:#e07060;">The concealment was not incidental &mdash; it was systematic.</strong> Moira understood that her social life and her financial extraction from Benjamin could not coexist in the open. Every drink, every party, every staycation had to exist in a separate universe from the man funding them. The 99 messages containing "secret," "sikreto," or "lihim" &mdash; combined with 29 instances of "halata/mahalata" (don't let it show) &mdash; form a <strong>documented architecture of secrecy</strong> spanning three years. She wasn't hiding one thing. She was hiding <strong>everything.</strong>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:0.8rem;margin-top:1.5rem;">
+        <div style="background:rgba(139,0,0,0.08);border:1px solid rgba(139,0,0,0.2);border-radius:6px;padding:0.8rem;text-align:center;"><div style="font-family:var(--font-heading);font-size:1.4rem;font-weight:800;color:#e07060;">99</div><div style="font-size:0.6rem;color:var(--text-dim);text-transform:uppercase;">Secret/Sikreto/Lihim Messages</div></div>
+        <div style="background:rgba(139,0,0,0.08);border:1px solid rgba(139,0,0,0.2);border-radius:6px;padding:0.8rem;text-align:center;"><div style="font-family:var(--font-heading);font-size:1.4rem;font-weight:800;color:#e07060;">29</div><div style="font-size:0.6rem;color:var(--text-dim);text-transform:uppercase;">Halata/Mahalata (Don't Let It Show)</div></div>
+        <div style="background:rgba(139,0,0,0.08);border:1px solid rgba(139,0,0,0.2);border-radius:6px;padding:0.8rem;text-align:center;"><div style="font-family:var(--font-heading);font-size:1.4rem;font-weight:800;color:#e07060;">11</div><div style="font-size:0.6rem;color:var(--text-dim);text-transform:uppercase;">Direct 'Wag Sabihin' Orders</div></div>
+        <div style="background:rgba(139,0,0,0.08);border:1px solid rgba(139,0,0,0.2);border-radius:6px;padding:0.8rem;text-align:center;"><div style="font-family:var(--font-heading);font-size:1.4rem;font-weight:800;color:#e07060;">158</div><div style="font-size:0.6rem;color:var(--text-dim);text-transform:uppercase;">Conceal+Party Same Message</div></div>
+      </div>
+    </div>
+  </div>
+
+<!-- NEW: Framing Benjamin as Abuser / Deadbeat -->
+<section class="room" id="room1b" style="min-height:auto;padding:3rem 2rem;">
+  <div class="room-header">
+    <div class="room-num">Phase I-B &middot; Blood Atmosphere &middot; The Smear Campaign</div>
+    <div class="room-title" style="font-size:clamp(1.5rem,4vw,2.5rem);">She Painted Him a Monster</div>
+    <div class="room-meta">Exhibit 1-G through 1-J &middot; Steven Loh Thread (425 msgs) &middot; False Abuse Claims &middot; Deadbeat Framing</div>
+  </div>
+  <p class="room-intro">While Moira was extracting money from Benjamin, booking staycations, and drinking in 13-day streaks, she was simultaneously running a <strong>parallel smear campaign</strong> against him — to his own employer. Ben's business partner Steven M. Loh received 425 messages painting Benjamin as a physically abusive, financially neglectful monster who beat his wife in front of the children and starved his family. Every single message was accompanied by: <strong style="color:#e07060;">"Please don't mention this to Ben."</strong></p>
+  
+  <div class="exhibit-grid">
+
+    <!-- THE STEVEN LOH THREAD -->
+    <div class="placard" style="border-color:#8b0000;background:linear-gradient(135deg,rgba(139,0,0,0.1) 0%,rgba(14,14,20,0.98) 60%);box-shadow:0 0 50px rgba(139,0,0,0.15);">
+      <div class="placard-meta">
+        <span class="placard-source" style="color:#e07060;font-size:0.8rem;letter-spacing:3px;">&#9888;&nbsp; EXHIBIT 1-G &middot; The Steven Loh Dossier</span>
+        <span class="placard-tag" style="background:rgba(139,0,0,0.2);border-color:rgba(139,0,0,0.5);color:#e07060;">&#9888; BLOOD RED — FALSE ALLEGATIONS</span>
+      </div>
+      <div style="background:linear-gradient(90deg,rgba(139,0,0,0.18) 0%,rgba(139,0,0,0.04) 100%);border-left:4px solid #8b0000;border-radius:4px;padding:1rem 1.2rem;margin-bottom:1.5rem;">
+        <div style="font-family:var(--font-mono);font-size:0.65rem;text-transform:uppercase;letter-spacing:2px;color:#e07060;margin-bottom:0.3rem;">The Thread Is Already Labeled in the Database</div>
+        <div style="font-size:0.88rem;color:#e2e8f0;line-height:1.6;">The WhatsApp thread between Moira and Steven M. Loh is named in MEMORYBANK_CLEAN.db as: <strong style="color:#e07060;">"Steven M. Loh with Moira (False Allegations)."</strong> Even the database architect, upon reviewing these 425 messages, classified them as what they are.</div>
+      </div>
+      <div style="font-family:var(--font-serif);font-size:1.1rem;font-style:italic;color:var(--text-quote);line-height:1.8;margin-bottom:1.5rem;">Steven Loh was Benjamin's employer and business partner — the man who paid Benjamin's salary that Moira was extracting. By going directly to Steven behind Ben's back, Moira was attacking Benjamin's <strong>livelihood, his reputation, and his financial future</strong> — while simultaneously demanding that Steven split Ben's salary and send half directly to her. She wanted Ben's boss to see Ben as an abuser, and she wanted Ben's money.</div>
+      
+      <!-- Chat transcript -->
+      <div style="display:flex;flex-direction:column;gap:0.8rem;margin-bottom:1.5rem;">
+        <div style="display:flex;justify-content:flex-start;">
+          <div style="max-width:78%;background:rgba(139,0,0,0.08);border:1px solid rgba(139,0,0,0.2);border-radius:0 14px 14px 14px;padding:0.9rem 1.1rem;position:relative;">
+            <div style="font-family:var(--font-mono);font-size:0.58rem;color:#e07060;letter-spacing:1px;margin-bottom:0.4rem;text-transform:uppercase;">Moira to Steven Loh &middot; Sep 14, 2025</div>
+            <div style="font-family:var(--font-serif);font-style:italic;font-size:1rem;color:#ebdca9;line-height:1.7;">"Ben hit me in front of the children. He went crazy several times in the house until just now before he left."</div>
+            <div style="font-size:0.62rem;color:#64748b;margin-top:0.5rem;text-align:right;">Then added: "Please don't mention this to Ben."</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-start;">
+          <div style="max-width:78%;background:rgba(139,0,0,0.08);border:1px solid rgba(139,0,0,0.2);border-radius:0 14px 14px 14px;padding:0.9rem 1.1rem;">
+            <div style="font-family:var(--font-mono);font-size:0.58rem;color:#e07060;letter-spacing:1px;margin-bottom:0.4rem;text-transform:uppercase;">Moira to Steven Loh &middot; Sep 15, 2025</div>
+            <div style="font-family:var(--font-serif);font-style:italic;font-size:1rem;color:#ebdca9;line-height:1.7;">"Ben is fucking me down"</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-start;">
+          <div style="max-width:78%;background:rgba(139,0,0,0.08);border:1px solid rgba(139,0,0,0.2);border-radius:0 14px 14px 14px;padding:0.9rem 1.1rem;">
+            <div style="font-family:var(--font-mono);font-size:0.58rem;color:#e07060;letter-spacing:1px;margin-bottom:0.4rem;text-transform:uppercase;">Moira to Steven Loh &middot; Oct 22, 2025</div>
+            <div style="font-family:var(--font-serif);font-style:italic;font-size:1rem;color:#ebdca9;line-height:1.7;">"He is very good torturing me."</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-start;">
+          <div style="max-width:78%;background:rgba(139,0,0,0.08);border:1px solid rgba(139,0,0,0.2);border-radius:0 14px 14px 14px;padding:0.9rem 1.1rem;">
+            <div style="font-family:var(--font-mono);font-size:0.58rem;color:#e07060;letter-spacing:1px;margin-bottom:0.4rem;text-transform:uppercase;">Moira to Steven Loh &middot; Oct 30, 2025</div>
+            <div style="font-family:var(--font-serif);font-style:italic;font-size:1rem;color:#ebdca9;line-height:1.7;">"He beat me in front of my children and they got traumatized as well."</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-start;">
+          <div style="max-width:78%;background:rgba(139,0,0,0.08);border:1px solid rgba(139,0,0,0.2);border-radius:0 14px 14px 14px;padding:0.9rem 1.1rem;">
+            <div style="font-family:var(--font-mono);font-size:0.58rem;color:#e07060;letter-spacing:1px;margin-bottom:0.4rem;text-transform:uppercase;">Moira to Steven Loh &middot; Nov 5, 2025</div>
+            <div style="font-family:var(--font-serif);font-style:italic;font-size:1rem;color:#ebdca9;line-height:1.7;">"He's been abandoning me for over a month. He never provides our needs and treats me like trash."</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="placard-analysis">
+        <strong style="color:#e07060;">The "Don't Tell Ben" Protocol.</strong> Every single message to Steven Loh was followed by an explicit instruction: <em>"Please don't mention this to Ben."</em> She was building a secret dossier against her husband with his own employer — a man who controlled Benjamin's income — while hiding the entire operation from Benjamin. This is not venting. This is <strong>economic sabotage.</strong><br><br>
+        <strong style="color:#e07060;">The Escalation Pattern.</strong> The claims escalated over time: from "hit me" (Sep 14) to "beat me" and "traumatized children" (Oct 30) to "maybe he already beat me many times" (speculative abuse inflation). The narrative grew more violent as her departure date approached.
+      </div>
+    </div>
+
+    <!-- THE DEADBEAT NARRATIVE -->
+    <div class="placard" style="border-color:#8b0000;background:linear-gradient(135deg,rgba(139,0,0,0.06) 0%,rgba(14,14,20,0.98) 60%);">
+      <div class="placard-meta">
+        <span class="placard-source" style="color:#e07060;font-size:0.8rem;letter-spacing:3px;">&#9888;&nbsp; EXHIBIT 1-H &middot; The Deadbeat Framing Campaign</span>
+        <span class="placard-tag" style="background:rgba(139,0,0,0.2);border-color:rgba(139,0,0,0.4);color:#e07060;">&#9888; 140 Messages — Provider Failure Narrative</span>
+      </div>
+      <div style="font-family:var(--font-serif);font-size:1.1rem;font-style:italic;color:var(--text-quote);line-height:1.8;margin-bottom:1.5rem;">While Benjamin was sending &pesos;3,485,393 across 38 documented months, Moira was telling his employer and her network that he <strong>never provided, starved his family, and abandoned them.</strong></div>
+      <div class="placard-quote" style="border-left-color:#8b0000;">"Who lets his wife starve and squizzing her just because he prioritizes other things over providing for her?"</div>
+      <div class="placard-translation">&mdash; Moira to Steven Loh, Oct 22, 2025. The woman who spent &pesos;9.86M across 38 months, who booked 56 staycations and hotels, who drank in 13-day streaks — telling Ben's boss she was being starved.</div>
+      <div class="placard-quote" style="border-left-color:#8b0000;">"He never provides our needs and treats me like trash."</div>
+      <div class="placard-translation">&mdash; Moira to Steven Loh, Nov 5, 2025. Twenty days before she boarded a plane to Malta, leaving two children with a nanny she had arranged three months earlier.</div>
+      <div class="placard-quote" style="border-left-color:#8b0000;">"I don't have any money to contribute to my father's funeral because of what Ben is doing to me."</div>
+      <div class="placard-translation">&mdash; Moira to Steven Loh, Nov 13, 2025. She used her father's death to extract money while framing Ben as the cause of her inability to contribute. The database shows she was actively spending on social outings during this same period.</div>
+      <div class="placard-analysis">
+        <strong style="color:#e07060;">140 messages.</strong> That's how many times Moira told someone — anyone — that Benjamin didn't provide, didn't send enough, or was financially strangling her. To his employer. To her friends. To her enablers. Every single one of these messages was sent while Benjamin's money was flowing into accounts she controlled — much of it routed through Alaine. The deadbeat narrative was not a complaint. It was a <strong>cover story</strong> for the extraction.
+      </div>
+    </div>
+
+    <!-- STEVEN LOH'S OWN WORDS -->
+    <div class="placard" style="border-color:#d4af37;background:linear-gradient(135deg,rgba(212,175,55,0.04) 0%,rgba(14,14,20,0.98) 60%);">
+      <div class="placard-meta">
+        <span class="placard-source" style="color:#d4af37;font-size:0.8rem;letter-spacing:3px;">&#9888;&nbsp; EXHIBIT 1-I &middot; Steven Loh's Own Assessment</span>
+        <span class="placard-tag" style="background:rgba(212,175,55,0.15);border-color:rgba(212,175,55,0.4);color:#d4af37;">GOLD — Employer's Testimony</span>
+      </div>
+      <div class="placard-quote" style="border-left-color:#d4af37;">"He is a fairly good boy, he loves you and the 2 kids, he didn't have any naughty issues wt any parties as I know him almost 1 yr..."</div>
+      <div class="placard-translation">&mdash; Steven M. Loh to Moira, Nov 14, 2025. The man who heard all 425 messages of abuse allegations, who knew Ben for nearly a year, who employed him and paid his salary — concluded Ben was a "fairly good boy." He offered to mediate. He asked Moira directly: <em>"If he is not fair, abusive, or doing wrong for u, pls let me know."</em> He was giving her a clear opening to substantiate her claims. She had no evidence to provide.</div>
+      <div class="placard-analysis">
+        <strong style="color:#d4af37;">The man who had the most to lose if Ben was unstable — his employer — concluded Ben was not a threat.</strong> Steven Loh had every incentive to act on credible abuse allegations. Instead, he characterized Ben as a good person who loved his children unconditionally. This independent assessment from a third party with direct knowledge of Ben's character is <strong>powerful exculpatory evidence.</strong>
+      </div>
+    </div>
+
+    <!-- THE RECONCILIATION CYCLE -->
+    <div class="placard" style="border-color:#b87333;">
+      <div class="placard-meta">
+        <span class="placard-source" style="color:#b87333;font-size:0.8rem;letter-spacing:3px;">&#9888;&nbsp; EXHIBIT 1-J &middot; The Reconciliation Cycle as Manipulation Tool</span>
+        <span class="placard-tag" style="border-color:rgba(184,115,51,0.4);color:#b87333;">COPPER — Cyclical Abuse of Trust</span>
+      </div>
+      <div style="font-family:var(--font-serif);font-size:1.05rem;color:var(--text-quote);line-height:1.8;margin-bottom:1.5rem;">Moira's communication with Steven Loh followed a <strong>predictable cycle</strong> that mirrors the commitment-trap pattern with Ben: extreme crisis → character assassination → sudden reconciliation → repeat.</div>
+      <table class="blueprint-table">
+        <thead><tr><th>Date</th><th>Claim Made</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td style="font-family:var(--font-mono);">Sep 14, 2025</td><td>"Ben hit me in front of the children" + "I never get any Salary"</td><td style="color:#d4af37;">Steven offers to split salary 500/500</td></tr>
+          <tr><td style="font-family:var(--font-mono);">Sep 15, 2025</td><td>"Ben is fucking me down" + anxiety claims</td><td style="color:#d4af37;">Moira says: "Send him all the money la" — contradicts her claim of needing money</td></tr>
+          <tr><td style="font-family:var(--font-mono);">Oct 22, 2025</td><td>"He is very good torturing me" + starving claim</td><td style="color:#8b0000;">Requests money from Steven 4x in 72 hours</td></tr>
+          <tr><td style="font-family:var(--font-mono);">Oct 30, 2025</td><td>"He beat me... children traumatized"</td><td style="color:#d97706;">Escalated language — 26 days before Malta departure</td></tr>
+          <tr><td style="font-family:var(--font-mono);">Nov 15, 2025</td><td>"We reconciled yesterday"</td><td style="color:#b87333;">No explanation. Crisis resolved off-screen.</td></tr>
+          <tr><td style="font-family:var(--font-mono);">Nov 27, 2025</td><td>"Verbal abuse including my children"</td><td style="color:#d97706;">Two days after Malta departure — still framing Ben as abuser from abroad</td></tr>
+          <tr><td style="font-family:var(--font-mono);">Dec 7, 2025</td><td>"We're okay. He finally softened."</td><td style="color:#d4af37;">Reconciled while living in Malta — continued extraction</td></tr>
+        </tbody>
+      </table>
+      <div style="font-size:0.85rem;color:var(--text-dim);margin-top:1.2rem;line-height:1.7;">This cycle — crisis, character destruction, reconciliation, repeat — is the <strong>signature of an abuser projecting her own behavior onto her victim.</strong> Ben was not violent. Ben was not neglectful. Ben was not starving his family. Ben was <strong>funding a woman who was building a case against him</strong> with his own employer, behind his back, while planning her escape to Malta.</div>
+    </div>
+
+    <!-- SUMMARY STATS -->
+    <div class="placard" style="border-color:#8b0000;">
+      <div class="placard-meta"><span class="placard-source" style="color:#e07060;">Evidence Grading &middot; The Smear Campaign Summary</span><span class="placard-tag" style="border-color:rgba(139,0,0,0.4);color:#e07060;">VERDICT: Systematic Character Assassination</span></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;">
+        <div style="text-align:center;padding:1rem;background:rgba(139,0,0,0.1);border:1px solid rgba(139,0,0,0.3);border-radius:6px;"><div style="font-family:var(--font-heading);font-size:1.6rem;font-weight:800;color:#e07060;">425</div><div style="font-size:0.65rem;color:var(--text-dim);text-transform:uppercase;">Messages to Steven Loh</div><div style="font-size:0.55rem;color:#e07060;margin-top:0.3rem;">(False Allegations)</div></div>
+        <div style="text-align:center;padding:1rem;background:rgba(139,0,0,0.1);border:1px solid rgba(139,0,0,0.3);border-radius:6px;"><div style="font-family:var(--font-heading);font-size:1.6rem;font-weight:800;color:#e07060;">325</div><div style="font-size:0.65rem;color:var(--text-dim);text-transform:uppercase;">Abuse/Violence Claims</div><div style="font-size:0.55rem;color:#e07060;margin-top:0.3rem;">BLOOD RED</div></div>
+        <div style="text-align:center;padding:1rem;background:rgba(139,0,0,0.1);border:1px solid rgba(139,0,0,0.3);border-radius:6px;"><div style="font-family:var(--font-heading);font-size:1.6rem;font-weight:800;color:#e07060;">140</div><div style="font-size:0.65rem;color:var(--text-dim);text-transform:uppercase;">Deadbeat/Provider Failure</div><div style="font-size:0.55rem;color:#e07060;margin-top:0.3rem;">BLOOD RED</div></div>
+        <div style="text-align:center;padding:1rem;background:rgba(139,0,0,0.1);border:1px solid rgba(139,0,0,0.3);border-radius:6px;"><div style="font-family:var(--font-heading);font-size:1.6rem;font-weight:800;color:#e07060;">&pesos;3.49M</div><div style="font-size:0.65rem;color:var(--text-dim);text-transform:uppercase;">Ben Actually Sent</div><div style="font-size:0.55rem;color:#d4af37;margin-top:0.3rem;">GOLD — Contradiction</div></div>
+      </div>
+      <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.7;margin-top:1.5rem;padding:1rem;background:rgba(139,0,0,0.06);border:1px solid rgba(139,0,0,0.2);border-radius:6px;">
+        <strong style="color:#e07060;">This is defamation by the numbers.</strong> 425 messages to Ben's employer painting him as an abuser. 325 abuse/violence claims across her network. 140 deadbeat/provider-failure messages. All of it contradicted by &pesos;3,485,393 in documented transfers, the employer's own positive assessment, and Moira's own admission: <em>"Ben is the provider."</em> The woman who claimed she was being starved was the same woman booking 56 staycations. The woman who claimed Ben beat her children was the same woman who abandoned them with one eggplant. The framing was not collateral damage. <strong>It was the strategy.</strong>
+      </div>
+    </div>
+  </div>
+</section>
+
+</section>
+
+<!-- ROOM II: THE CRUCIBLE -->
+<section class="room" id="room2">
+  <div class="room-header"><div class="room-num">Phase II &middot; Copper Atmosphere &middot; Fire &amp; Survival</div><div class="room-title">The Crucible of Sacrifice</div><div class="room-meta">Exhibit 2-A through 2-C &middot; Cambodia Captivity &middot; Ransom &middot; Post-Trauma Extraction</div></div>
+  <p class="room-intro">While Moira managed her double life in the Philippines, Benjamin was fighting for his in Cambodia. Lured by a job scam, he was held captive in a Phnom Penh compound, forced into cyber scam operations under threat of violence. During this nightmare, he <strong>continued sending money home</strong> &mdash; a captive funding the freedom of the woman who was already planning her escape from him.</p>
+  <div class="exhibit-grid">
+    <div class="placard" style="border-color:#b87333;"><div class="placard-meta"><span class="placard-source" style="color:#b87333;">Survival Timeline &middot; Phnom Penh, Cambodia</span><span class="placard-tag" style="border-color:rgba(184,115,51,0.4);color:#b87333;">&#9888; Captivity Evidence</span></div>
+      <div class="timeline-spine">
+        <div class="timeline-node"><div class="timeline-date">2023 &mdash; The Trap</div><div class="timeline-content"><div class="timeline-heading">Job Scam Lures Benjamin to Cambodia</div><div class="timeline-desc">Promised legitimate employment. Instead: confined in a Phnom Penh compound, passport seized, forced into cyber scam operations under armed guard.</div></div></div>
+        <div class="timeline-node"><div class="timeline-date">2023-2024 &mdash; Captivity Period</div><div class="timeline-content"><div class="timeline-heading">Months of Forced Labor</div><div class="timeline-desc">Benjamin worked under duress while simultaneously <strong>remitting money to Moira</strong> from whatever scraps he could salvage. A captive funding a free woman's social life.</div></div></div>
+        <div class="timeline-node"><div class="timeline-date">2024 &mdash; Ransom &amp; Escape</div><div class="timeline-content"><div class="timeline-heading">Ransom Paid. Benjamin Escapes.</div><div class="timeline-desc">Family and friends mobilized to pay the ransom. Benjamin escaped, physically depleted and psychologically shattered.</div></div></div>
+        <div class="timeline-node"><div class="timeline-date">2024-2025 &mdash; Post-Captivity</div><div class="timeline-content"><div class="timeline-heading">Recovery While Being Drained</div><div class="timeline-desc">While recovering, Benjamin resumed full financial support. The extraction <strong>intensified</strong> &mdash; his post-captivity vulnerability was weaponized.</div></div></div>
+      </div>
+    </div>
+    <div class="placard"><div class="placard-meta"><span class="placard-source">Financial Ledger &middot; 2024 Peak Extraction</span><span class="placard-tag">Blood Money</span></div>
+      <table class="ledger-table"><tr><td>2024 Total Discussed</td><td style="color:#fff;font-weight:700;">&pesos;9,447,914</td></tr><tr><td>Benjamin-Sent (2024)</td><td style="color:#b87333;font-weight:700;">&pesos;1,775,591</td></tr><tr><td>Moira-Involved (2024)</td><td style="color:#b87333;">&pesos;3,209,187</td></tr><tr><td>Aug 2024 (Peak Month)</td><td style="color:#fff;">&pesos;2,847,594 (Ben: &pesos;1,142,712)</td></tr><tr><td>Post-Captivity Pattern</td><td style="color:#8b0000;">Extraction intensified after escape</td></tr></table>
+    </div>
+    <div class="placard" style="border-color:#8b0000;background:linear-gradient(135deg,rgba(139,0,0,0.06) 0%,rgba(14,14,20,0.98) 60%);"><div class="placard-meta"><span class="placard-source" style="color:#e07060;">Contradiction Analysis</span><span class="placard-tag" style="border-color:rgba(139,0,0,0.4);color:#e07060;">&#9888; Direct Contradiction</span></div><div class="placard-quote" style="border-left-color:#8b0000;">"He gives money, of course, as a husband's duty. Ben is the provider..."</div><div class="placard-translation">&mdash; Moira to Steven Loh, Sept 15, 2025. She admits Ben provided &mdash; then demanded secrecy.</div><div class="placard-analysis">This single sentence destroys the deadbeat narrative. To Ben, she threatened abandonment for not giving enough. To his employer, she <strong>admitted he provided</strong> &mdash; then demanded nobody tell him. Two audiences, two stories.</div></div>
+    <div class="placard" style="border-color:#8b0000;">
+      <div class="placard-meta"><span class="placard-source" style="color:#e07060;">The Cambodia Paradox &middot; A Captive Funding Freedom</span><span class="placard-tag" style="border-color:rgba(139,0,0,0.4);color:#e07060;">&#9888; Extreme Sacrifice</span></div>
+      <div style="font-family:var(--font-serif);font-size:1.1rem;font-style:italic;color:var(--text-quote);line-height:1.8;margin-bottom:1.5rem;">"While Benjamin was locked in a Phnom Penh compound &mdash; passport seized, armed guards at the gate, forced into cyber scam operations under threat of violence &mdash; he continued sending money to the woman who was already planning her escape from him."</div>
+      <div class="exhibit-grid-2col">
+        <div style="background:rgba(139,0,0,0.06);border:1px solid rgba(139,0,0,0.2);border-radius:6px;padding:1.2rem;">
+          <div style="font-family:var(--font-mono);font-size:0.62rem;text-transform:uppercase;letter-spacing:2px;color:#e07060;margin-bottom:0.8rem;">Benjamin's Reality</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.7;">Confined in a scam compound. Passport confiscated. Armed surveillance. Forced labor under duress. Physical deprivation. Psychological torture. <strong>Simultaneously:</strong> wiring whatever money he could salvage to the Philippines.</div>
+        </div>
+        <div style="background:rgba(212,175,55,0.04);border:1px solid rgba(212,175,55,0.15);border-radius:6px;padding:1.2rem;">
+          <div style="font-family:var(--font-mono);font-size:0.62rem;text-transform:uppercase;letter-spacing:2px;color:#d4af37;margin-bottom:0.8rem;">Moira's Reality</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.7;">Free. Employed. Socializing. Drinking in 13-day streaks. Managing a network of enablers. Planning a covert departure to Malta. <strong>Simultaneously:</strong> extracting money from the man in captivity using guilt, children, and fake emergencies.</div>
+        </div>
+      </div>
+    </div>
+    <div class="placard" style="border-color:#b87333;">
+      <div class="placard-meta"><span class="placard-source" style="color:#b87333;">The Post-Captivity Extraction Spike &middot; Vulnerability Weaponized</span><span class="placard-tag" style="border-color:rgba(184,115,51,0.4);color:#b87333;">COPPER: Manipulation</span></div>
+      <div style="font-size:0.9rem;color:var(--text-dim);line-height:1.75;margin-bottom:1.5rem;">After Benjamin's escape from Cambodia, a predictable pattern should have followed: recovery, rebuilding, healing. Instead, the <strong>financial extraction intensified</strong>. Moira understood that a traumatized man was more susceptible to guilt-based appeals. His post-captivity psychological state was not a reason to protect him &mdash; it was a <strong>vulnerability to exploit.</strong></div>
+      <table class="blueprint-table">
+        <thead><tr><th>Period</th><th>Benjamin's State</th><th>Moira's Extraction</th><th>Monthly Avg</th></tr></thead>
+        <tbody>
+          <tr><td>Pre-Captivity (2023)</td><td>Stable, employed abroad</td><td>Moderate, building trust</td><td>&pesos;334,300</td></tr>
+          <tr><td style="color:#8b0000;">During Captivity (2023-2024)</td><td style="color:#8b0000;">Confined, under duress</td><td style="color:#8b0000;">Continuous despite danger</td><td style="color:#8b0000;">Funds sent irregularly</td></tr>
+          <tr><td style="color:#8b0000;font-weight:700;">Post-Captivity (2024)</td><td style="color:#8b0000;">Traumatized, recovering</td><td style="color:#8b0000;font-weight:700;">SHARP INCREASE</td><td style="color:#8b0000;font-weight:700;">&pesos;787,326</td></tr>
+          <tr><td>Post-Recovery (2025)</td><td>Employed, stable</td><td>Sustained high extraction</td><td>&pesos;663,036</td></tr>
+        </tbody>
+      </table>
+      <div style="font-size:0.82rem;color:var(--text-dim);margin-top:1.2rem;line-height:1.7;">The monthly average <strong>more than doubled</strong> after Benjamin escaped captivity. His trauma made him more vulnerable. Her response was not compassion. It was <strong>acceleration.</strong></div>
+    </div>
+    <div class="placard" style="border-color:#b87333;">
+      <div class="placard-meta"><span class="placard-source" style="color:#b87333;">Sacrifice Ledger &middot; Room II Summary</span><span class="placard-tag">VERDICT: Sacrifice Exploited</span></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;">
+        <div style="text-align:center;padding:1rem;background:rgba(0,0,0,0.2);border-radius:6px;"><div style="font-family:var(--font-heading);font-size:1.8rem;font-weight:800;color:#b87333;">Months</div><div style="font-size:0.7rem;color:var(--text-dim);">Captivity Duration</div></div>
+        <div style="text-align:center;padding:1rem;background:rgba(0,0,0,0.2);border-radius:6px;"><div style="font-family:var(--font-heading);font-size:1.8rem;font-weight:800;color:#8b0000;">2.4&times;</div><div style="font-size:0.7rem;color:var(--text-dim);">Post-Escape Extraction Increase</div></div>
+        <div style="text-align:center;padding:1rem;background:rgba(0,0,0,0.2);border-radius:6px;"><div style="font-family:var(--font-heading);font-size:1.8rem;font-weight:800;color:#d4af37;">&pesos;9.45M</div><div style="font-size:0.7rem;color:var(--text-dim);">2024 Total Discussed</div></div>
+        <div style="text-align:center;padding:1rem;background:rgba(0,0,0,0.2);border-radius:6px;"><div style="font-family:var(--font-heading);font-size:1.8rem;font-weight:800;color:#b87333;">0</div><div style="font-size:0.7rem;color:var(--text-dim);">Times She Told Him To Stop</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ROOM III: THE EXTRACTION NETWORK -->
+<section class="room" id="room3">
+  <div class="room-header"><div class="room-num">Phase III &middot; Amber Atmosphere &middot; Architecture of Extraction</div><div class="room-title">The Extraction Network</div><div class="room-meta">Exhibit 3-A through 3-D &middot; ATM Strategy &middot; Alaine Money Conduit &middot; Dramahan Coaching</div></div>
+  <p class="room-intro">Money does not flow without plumbing. Behind every peso Benjamin sent was a <strong>relay system</strong> designed to obscure the trail. Alaine G Antonio-Aquino was the primary conduit: 35,023 messages, the highest volume of any contact. She didn't just know about the extraction &mdash; she <strong>managed it.</strong></p>
+  <div class="guilt-key"><div class="guilt-item"><div class="guilt-dot guilt-gold"></div> Gold: Financial Pattern</div><div class="guilt-item"><div class="guilt-dot guilt-copper"></div> Copper: Manipulation</div><div class="guilt-item"><div class="guilt-dot guilt-amber"></div> Amber: Concealment</div><div class="guilt-item"><div class="guilt-dot guilt-blood"></div> Blood Red: Direct Harm</div></div>
+  <div class="exhibit-grid">
+    <div class="placard" style="border-color:#d97706;"><div class="placard-meta"><span class="placard-source" style="color:#d97706;">Network Blueprint &middot; Money Conduit Analysis</span><span class="placard-tag" style="border-color:rgba(217,119,6,0.4);color:#d97706;">&#9888; Structural Extraction</span></div>
+      <table class="blueprint-table"><thead><tr><th>Conduit</th><th>Messages</th><th>Role</th><th>Volume</th></tr></thead><tbody>
+        <tr><td style="color:#fff;font-weight:700;">Alaine G Antonio-Aquino</td><td style="font-family:var(--font-mono);color:#d97706;font-weight:700;">35,023</td><td>Primary Money Conduit</td><td><div class="bar-container"><div class="bar-fill" style="width:100%;background:#d97706;"></div></div></td></tr>
+        <tr><td>Albert Antonio</td><td style="font-family:var(--font-mono);">399 (with Ben)</td><td>Silent Enabler</td><td><div class="bar-container"><div class="bar-fill" style="width:14%;"></div></div></td></tr>
+        <tr><td>Zia Galeon</td><td style="font-family:var(--font-mono);">30+ (critical)</td><td>Contradicting Confidante</td><td><div class="bar-container"><div class="bar-fill" style="width:8%;"></div></div></td></tr>
+        <tr><td>Hilda Guzman Antonio</td><td style="font-family:var(--font-mono);">10+ (departure)</td><td>Logistics Coordinator</td><td><div class="bar-container"><div class="bar-fill" style="width:5%;"></div></div></td></tr>
+      </tbody></table>
+    </div>
+    <div class="placard"><div class="placard-meta"><span class="placard-source">Keyword Evidence &middot; Click to Reveal</span><span class="placard-tag">Interactive</span></div>
+      <div class="kw-grid"><div class="kw-chip active" data-kw="atm" onclick="switchKeyword('atm')">ATM Machine</div><div class="kw-chip" data-kw="cashcow" onclick="switchKeyword('cashcow')">Cash Cow</div><div class="kw-chip" data-kw="manip" onclick="switchKeyword('manip')">Best Actress</div><div class="kw-chip" data-kw="network" onclick="switchKeyword('network')">2,521 Advice</div></div>
+      <div class="kw-display-quote" id="keyword-quote">"Pero ang tingen sakin ATM machine na Kaya ko mag luwal Ng pera anytime." (But they look at me as an ATM machine &mdash; her own manipulative dynamic projected outward).</div>
+    </div>
+    <div class="placard" style="border-color:#8b0000;"><div class="placard-meta"><span class="placard-source" style="color:#e07060;">Alaine Money Conduit &middot; Chat Evidence</span><span class="placard-tag" style="border-color:rgba(139,0,0,0.4);color:#e07060;">&#9888; Direct Evidence</span></div>
+      <div class="placard-quote" style="border-left-color:#8b0000;">"Iniisip ko nga sayo ko na padala lahat ng pera next month. Tapos ikaw na bahala mag send ng pera sa banko"</div>
+      <div class="placard-translation">"I'm thinking of sending all the money to you next month. Then you'll be the one to send it to the bank." &mdash; Moira routing ALL money through Alaine.</div>
+      <div class="placard-analysis">This is the <strong>money laundering structure</strong> in Moira's own words. All of Benjamin's money would flow to Alaine first. Benjamin would have zero visibility into where his money actually went.</div>
+    </div>
+    <div class="placard" style="border-color:#d97706;"><div class="placard-meta"><span class="placard-source" style="color:#d97706;">Alaine Coaching &middot; Manipulation Instructions</span><span class="placard-tag" style="border-color:rgba(217,119,6,0.4);color:#d97706;">&#9888; Active Coaching</span></div>
+      <div class="placard-quote" style="border-left-color:#d97706;">"si benjie ba di mahingian ng allowance??"</div><div class="placard-translation">"Can't you ask Benjie for an allowance??" &mdash; Alaine pushing for extraction.</div>
+      <div class="placard-quote" style="border-left-color:#d97706;">"Dramahan mo haha"</div><div class="placard-translation">"Add drama to it haha" &mdash; Alaine instructing emotional manipulation.</div>
+      <div class="placard-analysis">Alaine didn't just passively receive information. She <strong>actively coached</strong> Moira on extraction. "Dramahan mo" is an explicit instruction to use emotional manipulation. This is not friendship. This is <strong>co-conspiracy.</strong></div>
+    </div>
+    <div class="placard" style="border-color:#d97706;">
+      <div class="placard-meta"><span class="placard-source" style="color:#d97706;">Financial Flow Architecture &middot; The Invisible Plumbing</span><span class="placard-tag" style="border-color:rgba(217,119,6,0.4);color:#d97706;">&#9888; Structural Analysis</span></div>
+      <div style="font-size:0.9rem;color:var(--text-dim);line-height:1.75;margin-bottom:1.5rem;">Money from Benjamin never went directly to household expenses. It flowed through a <strong>deliberate obscuration layer</strong> &mdash; Alaine &mdash; who served as both buffer and blind. This architecture ensured Benjamin could never trace where his money actually landed. The system was not improvised. It was <strong>engineered.</strong></div>
+      <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;justify-content:center;margin-bottom:2rem;">
+        <div style="background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.2);border-radius:8px;padding:0.8rem 1.2rem;text-align:center;"><div style="font-family:var(--font-mono);font-size:0.58rem;color:var(--text-dim);text-transform:uppercase;">Benjamin</div><div style="font-family:var(--font-heading);font-size:0.9rem;font-weight:700;color:#d4af37;">Sends Money</div></div>
+        <span style="color:var(--text-dim);font-size:1.5rem;">&rarr;</span>
+        <div style="background:rgba(139,0,0,0.1);border:2px solid rgba(139,0,0,0.4);border-radius:8px;padding:0.8rem 1.2rem;text-align:center;"><div style="font-family:var(--font-mono);font-size:0.58rem;color:#e07060;text-transform:uppercase;">Alaine</div><div style="font-family:var(--font-heading);font-size:0.9rem;font-weight:700;color:#e07060;">Receives &amp; Routes</div></div>
+        <span style="color:var(--text-dim);font-size:1.5rem;">&rarr;</span>
+        <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:0.8rem 1.2rem;text-align:center;"><div style="font-family:var(--font-mono);font-size:0.58rem;color:var(--text-dim);text-transform:uppercase;">Unknown Destination</div><div style="font-family:var(--font-heading);font-size:0.9rem;font-weight:700;color:var(--text-dim);">Visibility Lost</div></div>
+      </div>
+      <div style="background:rgba(139,0,0,0.06);border:1px solid rgba(139,0,0,0.2);border-radius:6px;padding:1.2rem;">
+        <div style="font-family:var(--font-mono);font-size:0.62rem;text-transform:uppercase;letter-spacing:2px;color:#e07060;margin-bottom:0.8rem;">The Critical Question</div>
+        <div style="font-size:0.88rem;color:var(--text-dim);line-height:1.7;">If the money was truly for household expenses &mdash; rent, utilities, children's food, milk, diapers &mdash; <strong style="color:#fff;">why did it need to be routed through Alaine?</strong> Why not send it directly to the landlord? To the utility company? To the grocery store? The answer is embedded in the architecture: the money was not for what she claimed it was for. The conduit existed because <strong>transparency would have revealed the fraud.</strong></div>
+      </div>
+    </div>
+    <div class="placard" style="border-color:#d4af37;">
+      <div class="placard-meta"><span class="placard-source" style="color:#d4af37;">The "Us Girls" Sub-Network &middot; 2,521 Advice Messages</span><span class="placard-tag" style="background:rgba(212,175,55,0.15);border-color:rgba(212,175,55,0.4);color:#d4af37;">GOLD: Network Evidence</span></div>
+      <div style="font-family:var(--font-serif);font-size:1.05rem;color:var(--text-quote);line-height:1.8;margin-bottom:1.5rem;">The "Us Girls" group exchanged <strong>2,521 advice messages</strong> &mdash; the highest count of any subgroup in the network. This was not casual chat. This was a <strong>strategy hub</strong> where techniques were shared, alibis were refined, and Benjamin's financial value was continuously assessed and maximized.</div>
+      <table class="blueprint-table">
+        <thead><tr><th>Advice Category</th><th>Message Count</th><th>Function</th><th>Grade</th></tr></thead>
+        <tbody>
+          <tr><td>Financial Extraction Tips</td><td style="font-family:var(--font-mono);">~800+</td><td>How to angle requests, timing, amounts</td><td style="color:#d4af37;">GOLD</td></tr>
+          <tr><td>Relationship Management</td><td style="font-family:var(--font-mono);">~700+</td><td>When to be sweet, when to threaten</td><td style="color:#b87333;">COPPER</td></tr>
+          <tr><td>Secrecy Protocols</td><td style="font-family:var(--font-mono);">~500+</td><td>How to conceal, who to tell, who to silence</td><td style="color:#d97706;">AMBER</td></tr>
+          <tr><td>Escape Planning</td><td style="font-family:var(--font-mono);">~300+</td><td>Malta logistics, cover stories, timelines</td><td style="color:#8b0000;">BLOOD</td></tr>
+        </tbody>
+      </table>
+      <div style="font-size:0.82rem;color:var(--text-dim);margin-top:1.2rem;line-height:1.7;">The "Us Girls" group was Moira's <strong>command center</strong>. Every major decision &mdash; from how much money to request to when to finally leave &mdash; was workshopped here. Benjamin was not dealing with one manipulator. He was dealing with a <strong>collective intelligence</strong> dedicated to his financial extraction.</div>
+    </div>
+    <!-- NEW: Moira as Social Hub — Center of Every Party -->
+    <div class="placard" style="border-color:#d97706;background:linear-gradient(135deg,rgba(217,119,6,0.06) 0%,rgba(14,14,20,0.98) 60%);">
+      <div class="placard-meta">
+        <span class="placard-source" style="color:#d97706;font-size:0.8rem;letter-spacing:3px;">&#127864;&nbsp; SOCIAL HUB &middot; She Was the Center of Every Party</span>
+        <span class="placard-tag" style="background:rgba(217,119,6,0.2);border-color:rgba(217,119,6,0.4);color:#d97706;">&#9888; AMBER</span>
+      </div>
+      <div style="font-family:var(--font-serif);font-size:1.1rem;font-style:italic;color:var(--text-quote);line-height:1.8;margin-bottom:1.5rem;">Moira was not a bystander in her social world. She was its <strong>gravitational center</strong>. The database reveals someone constantly invited, constantly organizing, constantly at the middle of every gathering — while Benjamin believed she was home with the children, struggling to make ends meet.</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:1.5rem;">
+        <div style="background:rgba(217,119,6,0.08);border:1px solid rgba(217,119,6,0.2);border-radius:6px;padding:1rem;text-align:center;"><div style="font-family:var(--font-heading);font-size:1.6rem;font-weight:800;color:#d97706;">112</div><div style="font-size:0.65rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;">Walwal/Drinking Msgs</div><div style="font-size:0.55rem;color:var(--text-dim);margin-top:0.3rem;">From Moira personally</div></div>
+        <div style="background:rgba(217,119,6,0.08);border:1px solid rgba(217,119,6,0.2);border-radius:6px;padding:1rem;text-align:center;"><div style="font-family:var(--font-heading);font-size:1.6rem;font-weight:800;color:#d97706;">75</div><div style="font-size:0.65rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;">Inuman/Bar/Club/Shot</div><div style="font-size:0.55rem;color:var(--text-dim);margin-top:0.3rem;">Drinking events</div></div>
+        <div style="background:rgba(217,119,6,0.08);border:1px solid rgba(217,119,6,0.2);border-radius:6px;padding:1rem;text-align:center;"><div style="font-family:var(--font-heading);font-size:1.6rem;font-weight:800;color:#d97706;">56</div><div style="font-size:0.65rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;">Staycation/Hotel</div><div style="font-size:0.55rem;color:var(--text-dim);margin-top:0.3rem;">Overnight messages</div></div>
+        <div style="background:rgba(217,119,6,0.08);border:1px solid rgba(217,119,6,0.2);border-radius:6px;padding:1rem;text-align:center;"><div style="font-family:var(--font-heading);font-size:1.6rem;font-weight:800;color:#d97706;">52</div><div style="font-size:0.65rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;">Tara/Labas Invites</div><div style="font-size:0.55rem;color:var(--text-dim);margin-top:0.3rem;">People seeking her</div></div>
+      </div>
+      <div class="placard-quote" style="border-left-color:#d97706;">"Kita tayo sa baba may bigay ako sayo spagettie hahaha"</div>
+      <div class="placard-translation">&mdash; Friend to Moira, April 23, 2023. <em>"Let's meet downstairs, I have spaghetti for you hahaha."</em> Moira was the person people sought out. She was the social gravity.</div>
+      <div class="placard-quote" style="border-left-color:#d97706;">"Tara inom kong kaya ko"</div>
+      <div class="placard-translation">&mdash; Group chat, January 1, 2023. <em>"Let's drink if I can."</em> Moira was included in every invitation. 232 total "tara/labas tayo" messages across her networks.</div>
+      <div class="placard-analysis">
+        <strong style="color:#d97706;">232 "tara/labas tayo" invitations. 129 "sama/sumama/isama" messages involving Moira. 56 staycation/hotel messages from Moira personally.</strong> These are not the numbers of a struggling mother. These are the numbers of someone <strong>constantly out, constantly invited, constantly at the center.</strong> While telling Benjamin she couldn't afford electricity, she was booking hotels and coordinating group outings.
+        <div style="margin-top:1rem;padding:1rem;background:rgba(139,0,0,0.06);border:1px solid rgba(139,0,0,0.2);border-radius:6px;">
+          <div style="font-family:var(--font-mono);font-size:0.62rem;text-transform:uppercase;letter-spacing:2px;color:#e07060;margin-bottom:0.5rem;">The Two-Reality Contradiction</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.7;">To Benjamin: <em>"I have no time, no money, no energy for anything but survival."</em> To her network: <strong>always available, always organizing, always at the party.</strong> These two realities cannot both be true. One was a <strong>performance.</strong> The 232 invitations and 129 join requests prove which one.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="placard" style="border-color:#d97706;">
+      <div class="placard-meta"><span class="placard-source" style="color:#d97706;">Evidence Grading &middot; Room III Summary</span><span class="placard-tag">VERDICT: Network Confirmed</span></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;">
+        <div style="text-align:center;padding:1rem;background:rgba(0,0,0,0.2);border-radius:6px;"><div style="font-family:var(--font-heading);font-size:1.8rem;font-weight:800;color:#d4af37;">35,023</div><div style="font-size:0.7rem;color:var(--text-dim);">Alaine Messages</div></div>
+        <div style="text-align:center;padding:1rem;background:rgba(0,0,0,0.2);border-radius:6px;"><div style="font-family:var(--font-heading);font-size:1.8rem;font-weight:800;color:#d97706;">2,521</div><div style="font-size:0.7rem;color:var(--text-dim);">Advice Messages</div></div>
+        <div style="text-align:center;padding:1rem;background:rgba(0,0,0,0.2);border-radius:6px;"><div style="font-family:var(--font-heading);font-size:1.8rem;font-weight:800;color:#8b0000;">2</div><div style="font-size:0.7rem;color:var(--text-dim);">Coaching Instructions</div></div>
+        <div style="text-align:center;padding:1rem;background:rgba(0,0,0,0.2);border-radius:6px;"><div style="font-family:var(--font-heading);font-size:1.8rem;font-weight:800;color:#b87333;">1</div><div style="font-size:0.7rem;color:var(--text-dim);">Money Laundering Route</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ROOM IV: THE ENABLERS -->
+<section class="room" id="room4">
+  <div class="room-header"><div class="room-num">Phase IV &middot; Burnt Orange Atmosphere &middot; Those Who Knew and Said Nothing</div><div class="room-title">The Enablers</div><div class="room-meta">Exhibit 4-A &middot; Four People. 298 Days of Silence. Zero Interventions.</div></div>
+  <p class="room-intro">A fraud of this magnitude cannot happen in isolation. It requires a <strong>network of silence</strong> — people who knew the truth and chose to enable rather than expose. The four enablers below did not merely fail to warn Benjamin. They <strong>actively assisted</strong> Moira's departure, funded her extended stay, coordinated child logistics, and maintained the facade of innocence for nearly 300 days. Each one could have stopped this. <strong>None did.</strong></p>
+  <div class="guilt-key"><div class="guilt-item"><div class="guilt-dot guilt-blood"></div> Blood Red: Direct Enablement &mdash; Knew, Assisted, Concealed</div><div class="guilt-item"><div class="guilt-dot guilt-amber"></div> Amber: Active Knowledge &mdash; Knew, Said Nothing</div></div>
+  <div class="enabler-grid">
+    <!-- ALBERT -->
+    <div class="enabler-card" style="border-color:rgba(139,0,0,0.4);">
+      <div class="enabler-card-header">
+        <div class="enabler-initials" style="background:rgba(139,0,0,0.2);color:#e07060;">AA</div>
+        <div><div class="enabler-name">Albert Antonio</div><div class="enabler-role" style="color:#e07060;">The Godfather &middot; Grade: ENABLER</div></div>
+      </div>
+      <div class="enabler-quote-list">
+        <div class="enabler-quote" style="border-left-color:#8b0000;"><div class="who">Moira to Albert &middot; Jan 30, 2025</div><div class="msg">"May offer ako abroad... Takot siya hiwalayan ko na talaga."</div><div class="date-tag">298 days before Malta departure. Albert was the FIRST to know.</div></div>
+        <div class="enabler-quote" style="border-left-color:#8b0000;"><div class="who">Albert to Moira &middot; Dismissing Ben</div><div class="msg">"Iwan ko sa kanya .. masyado believe sa sarili"</div><div class="date-tag">Albert dismissed Benjamin entirely. Encouraged Moira's path.</div></div>
+        <div class="enabler-quote" style="border-left-color:#8b0000;"><div class="who">Feb 7, 2026 &middot; The Eggplant Incident</div><div class="msg">"the children doesn't have food at home and only one eggplant"</div><div class="date-tag">Ben begged Albert for &pesos;1,500. Albert maintained 399 msgs with Ben while knowing everything &mdash; never warned him.</div></div>
+      </div>
+    </div>
+    <!-- ZIA -->
+    <div class="enabler-card" style="border-color:rgba(139,0,0,0.4);">
+      <div class="enabler-card-header">
+        <div class="enabler-initials" style="background:rgba(139,0,0,0.2);color:#e07060;">ZG</div>
+        <div><div class="enabler-name">Zia Galeon</div><div class="enabler-role" style="color:#e07060;">The Doctor &middot; Grade: ENABLER</div></div>
+      </div>
+      <div class="enabler-quote-list">
+        <div class="enabler-quote" style="border-left-color:#8b0000;"><div class="who">Moira to Zia &middot; Nov 19, 2025</div><div class="msg">"Pa alis ako. Flight na ako Ng Tuesday. Malta Europe."</div><div class="date-tag">Six days before departure. A doctor &mdash; mandated reporter, trusted confidante &mdash; told and said nothing.</div></div>
+        <div class="enabler-quote" style="border-left-color:#8b0000;"><div class="who">Zia to Moira &middot; Nov 22, 2025</div><div class="msg">"With regards Sa kids. I really appreciate it talaga yung offer mo."</div><div class="date-tag">Zia OFFERED to house the children. She was not a bystander &mdash; she was a backup plan.</div></div>
+        <div class="enabler-quote" style="border-left-color:#8b0000;"><div class="who">Moira to Zia &middot; Nov 30, 2025</div><div class="msg">"Doc pwede ba ulit ako mapahiram ng Pera? Pinapabalik na kasi ako ni Ben sa pinas."</div><div class="date-tag">Zia funded the extended stay. Ben wanted her back. Zia ensured she stayed away.</div></div>
+        <div class="enabler-quote" style="border-left-color:#8b0000;"><div class="who">Dec 26, 2025 &middot; The "Shock" Lie</div><div class="msg">TOLD BENJAMIN SHE WAS "SHOCKED"</div><div class="date-tag">A proven contradiction. She knew since Nov 19. She offered to house the kids. She lent money. And claimed shock.</div></div>
+      </div>
+    </div>
+    <!-- HILDA -->
+    <div class="enabler-card" style="border-color:rgba(139,0,0,0.4);">
+      <div class="enabler-card-header">
+        <div class="enabler-initials" style="background:rgba(139,0,0,0.2);color:#e07060;">HGA</div>
+        <div><div class="enabler-name">Hilda Guzman Antonio</div><div class="enabler-role" style="color:#e07060;">The Godmother &middot; Grade: ENABLER</div></div>
+      </div>
+      <div class="enabler-quote-list">
+        <div class="enabler-quote" style="border-left-color:#8b0000;"><div class="who">Hilda to Moira &middot; Nov 22, 2025</div><div class="msg">"Kawawa naman ikaw nag eempake kapa niyan"</div><div class="date-tag">"Poor you, you're still packing" &mdash; Hilda watched Moira pack her bags. She knew.</div></div>
+        <div class="enabler-quote" style="border-left-color:#8b0000;"><div class="who">Hilda &middot; Nov 22, 2025</div><div class="msg">"Papunta na si Gemma"</div><div class="date-tag">She dispatched the nanny. Coordinated the child care handoff for Moira's departure.</div></div>
+        <div class="enabler-quote" style="border-left-color:#8b0000;"><div class="who">Hilda &middot; Nov 24, 2025</div><div class="msg">"Ano Oras flight Tom?"</div><div class="date-tag">Knew the exact flight time. One day before departure. She was tracking this like a schedule.</div></div>
+        <div class="enabler-quote" style="border-left-color:#8b0000;"><div class="who">Post-Departure &middot; Kids Had Nothing</div><div class="msg">"wala na Sabin panlaba"</div><div class="date-tag">Children had no soap for laundry. Hilda had to provide &mdash; proof she knew what Moira left behind.</div></div>
+        <div class="enabler-quote" style="border-left-color:#8b0000;"><div class="who">Hilda &middot; Dec 1, 2025</div><div class="msg">"Ay pasensiya na nak Moi wala kmi extra money ngayon"</div><div class="date-tag">Refused to fund a return ticket. Moira asked to come back. Hilda said no.</div></div>
+      </div>
+    </div>
+    <!-- ALAINE -->
+    <div class="enabler-card" style="border-color:rgba(139,0,0,0.5);box-shadow:0 0 30px rgba(139,0,0,0.15);">
+      <div class="enabler-card-header">
+        <div class="enabler-initials" style="background:rgba(139,0,0,0.25);color:#ff6b6b;">AGA</div>
+        <div><div class="enabler-name">Alaine G Antonio-Aquino</div><div class="enabler-role" style="color:#ff6b6b;">Primary Confidante &middot; Money Conduit &middot; Grade: CO-CONSPIRATOR</div></div>
+      </div>
+      <div class="enabler-quote-list">
+        <div class="enabler-quote" style="border-left-color:#8b0000;"><div class="who">Alaine to Moira &middot; Pushing for Money</div><div class="msg">"si benjie ba di mahingian ng allowance??"</div><div class="date-tag">"Can't you ask Benjie for an allowance??" &mdash; Active extraction coaching.</div></div>
+        <div class="enabler-quote" style="border-left-color:#8b0000;"><div class="who">Alaine to Moira &middot; Manipulation Script</div><div class="msg">"Dramahan mo haha"</div><div class="date-tag">"Add drama to it haha" &mdash; Explicit instruction to emotionally manipulate Benjamin.</div></div>
+        <div class="enabler-quote" style="border-left-color:#8b0000;"><div class="who">Moira to Alaine &middot; Money Routing</div><div class="msg">"Iniisip ko nga sayo ko na padala lahat ng pera next month. Tapos ikaw na bahala mag send ng pera sa banko"</div><div class="date-tag">ALL money routed through Alaine. Benjamin would see nothing.</div></div>
+        <div class="enabler-quote" style="border-left-color:#8b0000;"><div class="who">Dec 6, 2025 &middot; Post-Departure Routing</div><div class="msg">"Mamaya po pala pag magpadala ng pera si ben ky alaine ko nalang po lahat i send."</div><div class="date-tag">&pesos;2,000 sent for kids routed through Alaine. Children hungry with "one eggplant."</div></div>
+      </div>
+      <div style="margin-top:1.2rem;padding-top:1rem;border-top:1px solid rgba(139,0,0,0.3);">
+        <div style="font-family:var(--font-mono);font-size:0.58rem;text-transform:uppercase;letter-spacing:2px;color:#ff6b6b;margin-bottom:0.5rem;">Statistical Dominance</div>
+        <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:var(--text-dim);">
+          <span>Total Messages: <strong style="color:#ff6b6b;">35,023</strong></span><span>Highest Volume Contact</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="placard" style="border-color:#8b0000;margin-top:2rem;">
+    <div class="placard-meta"><span class="placard-source" style="color:#e07060;">Cross-Enabler Comparison &middot; Knowledge Timeline</span><span class="placard-tag" style="border-color:rgba(139,0,0,0.4);color:#e07060;">&#9888; Comparative Analysis</span></div>
+    <table class="blueprint-table">
+      <thead><tr><th>Enabler</th><th>Role</th><th>First Knew</th><th>Days Before</th><th>Action</th><th>Grade</th></tr></thead>
+      <tbody>
+        <tr><td style="color:#ff6b6b;font-weight:700;">Alaine Antonio-Aquino</td><td>Money Conduit &amp; Coach</td><td>Ongoing</td><td style="color:#8b0000;">Continuous</td><td>Managed money, coached manipulation, served as routing layer</td><td style="color:#8b0000;">CO-CONSPIRATOR</td></tr>
+        <tr><td style="font-weight:700;">Albert Antonio</td><td>Godfather</td><td>Jan 30, 2025</td><td style="color:#8b0000;">298</td><td>Dismissed Ben, maintained contact, never warned</td><td style="color:#8b0000;">ENABLER</td></tr>
+        <tr><td style="font-weight:700;">Zia Galeon</td><td>Doctor &amp; Confidante</td><td>Nov 19, 2025</td><td style="color:#8b0000;">6</td><td>Offered housing, lent money, claimed "shocked"</td><td style="color:#8b0000;">ENABLER</td></tr>
+        <tr><td style="font-weight:700;">Hilda Guzman Antonio</td><td>Logistics Coordinator</td><td>Nov 22, 2025</td><td style="color:#8b0000;">3</td><td>Watched pack, dispatched nanny, refused return ticket</td><td style="color:#8b0000;">ENABLER</td></tr>
+      </tbody>
+    </table>
+    <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.7;margin-top:1.5rem;">The timeline of knowledge is damning. <strong>Albert knew 298 days before</strong> &mdash; nearly ten months of silence while maintaining 399 messages with Benjamin. Zia, a <strong>doctor</strong> bound by professional ethics, knew 6 days before and did not alert the father of the children she offered to house. Hilda <strong>physically watched the packing</strong> and coordinated the nanny handoff. Alaine was the <strong>continuous infrastructure</strong> &mdash; the money never stopped flowing through her. At any point in this chain, one person saying "wait, this is wrong" could have changed everything. <strong>No one did.</strong></div>
+  </div>
+  <div class="placard" style="border-color:#8b0000;">
+    <div class="placard-meta"><span class="placard-source" style="color:#e07060;">Enabler Guilt Matrix &middot; Room IV Summary</span><span class="placard-tag" style="border-color:rgba(139,0,0,0.4);color:#e07060;">VERDICT: Collective Enablement</span></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;">
+      <div style="text-align:center;padding:1rem;background:rgba(139,0,0,0.1);border:1px solid rgba(139,0,0,0.3);border-radius:6px;"><div style="font-family:var(--font-heading);font-size:1.8rem;font-weight:800;color:#e07060;">4</div><div style="font-size:0.65rem;color:var(--text-dim);">Enablers Identified</div></div>
+      <div style="text-align:center;padding:1rem;background:rgba(139,0,0,0.1);border:1px solid rgba(139,0,0,0.3);border-radius:6px;"><div style="font-family:var(--font-heading);font-size:1.8rem;font-weight:800;color:#e07060;">298</div><div style="font-size:0.65rem;color:var(--text-dim);">Max Days of Silence</div></div>
+      <div style="text-align:center;padding:1rem;background:rgba(139,0,0,0.1);border:1px solid rgba(139,0,0,0.3);border-radius:6px;"><div style="font-family:var(--font-heading);font-size:1.8rem;font-weight:800;color:#e07060;">0</div><div style="font-size:0.65rem;color:var(--text-dim);">Warnings to Benjamin</div></div>
+      <div style="text-align:center;padding:1rem;background:rgba(139,0,0,0.1);border:1px solid rgba(139,0,0,0.3);border-radius:6px;"><div style="font-family:var(--font-heading);font-size:1.8rem;font-weight:800;color:#e07060;">1</div><div style="font-size:0.65rem;color:var(--text-dim);">Proven Lie ("Shocked")</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ROOM V: THE ABANDONMENT -->
+<section class="room" id="room5">
+  <div class="room-header"><div class="room-num">Phase V &middot; Blood Atmosphere &middot; The Silence That Kills</div><div class="room-title">The Abandonment</div><div class="room-meta">Exhibit 5-A through 5-D &middot; Malta Departure &middot; One Eggplant &middot; Collective Silence</div></div>
+  <p class="room-intro">On November 25, 2025, Moira Magnificat Yeo boarded a flight to Malta, Europe. She left behind two children and a husband who had survived Cambodian captivity to provide for them. She told Ben she was going for work. She told her enablers she was escaping. <strong>Neither group told Benjamin the truth.</strong> What follows is the timeline of a coordinated abandonment &mdash; a sequence of events that four people could have interrupted, and chose not to.</p>
+  <div class="guilt-key"><div class="guilt-item"><div class="guilt-dot guilt-blood"></div> Knew &amp; Assisted</div><div class="guilt-item"><div class="guilt-dot guilt-amber"></div> Knew &amp; Stayed Silent</div><div class="guilt-item"><div class="guilt-dot guilt-gold"></div> Departed / Key Event</div></div>
+  <div class="exhibit-grid">
+    <div class="placard" style="border-color:#8b0000;background:linear-gradient(135deg,rgba(139,0,0,0.08) 0%,rgba(14,14,20,0.98) 60%);">
+      <div class="placard-meta"><span class="placard-source" style="color:#e07060;">Enablement Timeline &middot; 374 Days of Coordinated Silence</span><span class="placard-tag" style="border-color:rgba(139,0,0,0.4);color:#e07060;">&#9888; Chronological Evidence</span></div>
+      <div class="timeline-spine">
+        <div class="timeline-node"><div class="timeline-date">2025-01-30 &mdash; 298 Days Before Departure</div><div class="timeline-content"><div class="timeline-heading">Albert Antonio: FIRST TO KNOW</div><div class="timeline-desc">Moira tells Albert about the abroad offer: <em style="color:#ebdca9;">"May offer ako abroad... Takot siya hiwalayan ko na talaga."</em> Albert dismisses Ben: <em style="color:#ebdca9;">"Iwan ko sa kanya .. masyado believe sa sarili."</em> Albert never warns Benjamin. For <strong>298 days</strong>, he maintains 399 messages with Ben while concealing this knowledge.</div></div></div>
+        <div class="timeline-node"><div class="timeline-date">2025-08 &mdash; 3 Months Before Departure</div><div class="timeline-content"><div class="timeline-heading">Nanny Arranged &middot; Logistics in Motion</div><div class="timeline-desc">Moira arranges Gemma the nanny &mdash; three months in advance. The departure was not impulsive. It was <strong>planned, staffed, and scheduled</strong> while Benjamin continued sending money, unaware.</div></div></div>
+        <div class="timeline-node"><div class="timeline-date">2025-11-19 &mdash; 6 Days Before Departure</div><div class="timeline-content"><div class="timeline-heading">Zia Galeon: TOLD THE FLIGHT</div><div class="timeline-desc">Moira to Zia: <em style="color:#ebdca9;">"Pa alis ako. Flight na ako Ng Tuesday. Malta Europe."</em> Zia, a doctor, a mandated reporter, receives this information. She does not tell Benjamin. She does not ask Moira if the children have a plan. She says nothing.</div></div></div>
+        <div class="timeline-node"><div class="timeline-date">2025-11-22</div><div class="timeline-content"><div class="timeline-heading">Zia Offers to House Children | Hilda Watches Moira Pack</div><div class="timeline-desc">Zia: <em style="color:#ebdca9;">"With regards Sa kids. I really appreciate it talaga yung offer mo."</em> She offers to be the children's guardian. Simultaneously, Hilda watches Moira pack: <em style="color:#ebdca9;">"Kawawa naman ikaw nag eempake kapa niyan."</em> Hilda dispatches the nanny: <em style="color:#ebdca9;">"Papunta na si Gemma."</em> Every logistical piece is in place &mdash; except telling Benjamin.</div></div></div>
+        <div class="timeline-node"><div class="timeline-date">2025-11-24 &mdash; 1 Day Before</div><div class="timeline-content"><div class="timeline-heading">Hilda Asks Flight Time</div><div class="timeline-desc">Hilda: <em style="color:#ebdca9;">"Ano Oras flight Tom?"</em> She knew the exact hour Moira would vanish. She tracked it like an appointment. Benjamin, thousands of miles away, believed Moira was simply going to work.</div></div></div>
+        <div class="timeline-node"><div class="timeline-date">2025-11-25 &mdash; MOIRA DEPARTS FOR MALTA</div><div class="timeline-content"><div class="timeline-heading" style="color:#8b0000;">DEPARTURE DAY &mdash; Children Left Behind</div><div class="timeline-desc">Moira boards a flight to Malta, Europe. Two children remain in the Philippines. Benjamin continues sending money, unaware she has left the country. The four enablers &mdash; Albert, Zia, Hilda, Alaine &mdash; all know. None speak.</div></div></div>
+        <div class="timeline-node"><div class="timeline-date">2025-11-30 &mdash; 5 Days After Departure</div><div class="timeline-content"><div class="timeline-heading">Zia Funds Extended Stay</div><div class="timeline-desc">Moira to Zia: <em style="color:#ebdca9;">"Doc pwede ba ulit ako mapahiram ng Pera? Pinapabalik na kasi ako ni Ben sa pinas."</em> Benjamin wanted her to return. Zia lent money to ensure she stayed. A doctor funded an abandonment.</div></div></div>
+        <div class="timeline-node"><div class="timeline-date">2025-12-01 &mdash; 6 Days After</div><div class="timeline-content"><div class="timeline-heading">Hilda Refuses Return Ticket Money</div><div class="timeline-desc">Hilda: <em style="color:#ebdca9;">"Ay pasensiya na nak Moi wala kmi extra money ngayon."</em> Moira asked to come back. Hilda said no. The godmother who watched her pack now refused to help her unpack this decision.</div></div></div>
+        <div class="timeline-node"><div class="timeline-date">2025-12-06 &mdash; 11 Days After</div><div class="timeline-content"><div class="timeline-heading">Children: No Food, No Soap | Alaine Money Routing Active</div><div class="timeline-desc">Children ran out of food and soap. Hilda had to provide basics: <em style="color:#ebdca9;">"wala na Sabin panlaba."</em> Simultaneously, Alaine's money relay is formally set up: <em style="color:#ebdca9;">"Mamaya po pala pag magpadala ng pera si ben ky alaine ko nalang po lahat i send."</em></div></div></div>
+        <div class="timeline-node"><div class="timeline-date">2025-12-26 &mdash; 31 Days After</div><div class="timeline-content"><div class="timeline-heading" style="color:#8b0000;">Zia Tells Ben She Was "Shocked" &mdash; PROVEN LIE</div><div class="timeline-desc">Zia tells Benjamin she was "shocked" to learn Moira had left. This is a <strong>documented contradiction</strong>. She knew on Nov 19. She offered to house the kids on Nov 22. She lent money on Nov 30. "Shocked" is an objective falsehood.</div></div></div>
+        <div class="timeline-node"><div class="timeline-date">2026-02-07 &mdash; 74 Days After</div><div class="timeline-content"><div class="timeline-heading" style="color:#8b0000;">ONE EGGPLANT &mdash; Ben Begs Albert for &pesos;1,500</div><div class="timeline-desc">Benjamin to Albert, desperate: <em style="color:#ebdca9;">"the children doesn't have food at home and only one eggplant."</em> The godfather who knew for 298 days, who dismissed Ben as "masyado believe sa sarili," was now being asked for <strong>1,500 pesos</strong> to feed the children Moira abandoned. A man who survived Cambodian captivity, reduced to begging the very person who helped make his children hungry.</div></div></div>
+      </div>
+    </div>
+    <div class="placard" style="border-color:#8b0000;">
+      <div class="placard-meta"><span class="placard-source" style="color:#e07060;">The Curtain of Silence &middot; Scan to Reveal</span><span class="placard-tag" style="border-color:rgba(139,0,0,0.4);color:#e07060;">&#9888; Interactive</span></div>
+      <div class="curtain-container" id="curtain-abandonment">
+        <div class="curtain-overlay">
+          <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+            <div class="curtain-label label-stated" style="margin-bottom:1.5rem;">STATED NARRATIVE</div>
+            <div style="font-family:var(--font-serif);font-size:1.3rem;font-style:italic;color:var(--text-quote);line-height:1.7;">"I'm going abroad for work. It's for the children. I'll send money back. Everything is fine."</div>
+            <div style="font-family:var(--font-mono);font-size:0.65rem;color:var(--text-dim);margin-top:1.5rem;">&mdash; Moira's stated reason to Benjamin</div>
+          </div>
+          <button class="scan-btn" onclick="scanCurtain('curtain-abandonment')">&#9888; SCAN: REVEAL FORENSIC FINDINGS</button>
+        </div>
+        <div class="curtain-underlay">
+          <div style="flex:1;">
+            <div class="curtain-label label-forensic" style="margin-bottom:1.5rem;">FORENSIC FINDINGS &mdash; CLASSIFIED: BLOOD RED</div>
+            <div style="font-family:var(--font-serif);font-size:1.3rem;font-style:italic;color:#e07060;line-height:1.7;margin-bottom:1.5rem;">"She did not go abroad for the children. She went abroad to escape the man funding them. Four people knew. All four chose silence. 298 days. Zero interventions. Not one person said: wait &mdash; what about the kids?"</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0.8rem;">
+              <div style="background:rgba(139,0,0,0.12);border:1px solid rgba(139,0,0,0.3);border-radius:4px;padding:0.8rem;text-align:center;"><div style="font-family:var(--font-heading);font-size:1.2rem;font-weight:800;color:#e07060;">298</div><div style="font-size:0.6rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;">Days of Silence</div></div>
+              <div style="background:rgba(139,0,0,0.12);border:1px solid rgba(139,0,0,0.3);border-radius:4px;padding:0.8rem;text-align:center;"><div style="font-family:var(--font-heading);font-size:1.2rem;font-weight:800;color:#e07060;">4</div><div style="font-size:0.6rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;">Who Could Have Stopped It</div></div>
+              <div style="background:rgba(139,0,0,0.12);border:1px solid rgba(139,0,0,0.3);border-radius:4px;padding:0.8rem;text-align:center;"><div style="font-family:var(--font-heading);font-size:1.2rem;font-weight:800;color:#e07060;">2</div><div style="font-size:0.6rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;">Children Abandoned</div></div>
+              <div style="background:rgba(139,0,0,0.12);border:1px solid rgba(139,0,0,0.3);border-radius:4px;padding:0.8rem;text-align:center;"><div style="font-family:var(--font-heading);font-size:1.2rem;font-weight:800;color:#e07060;">0</div><div style="font-size:0.6rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;">Warnings to Benjamin</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="placard" style="border-color:#8b0000;">
+      <div class="placard-meta"><span class="placard-source" style="color:#e07060;">The Children Left Behind &middot; What Moira's Network Knew</span><span class="placard-tag" style="border-color:rgba(139,0,0,0.4);color:#e07060;">&#9888; Child Welfare Evidence</span></div>
+      <div style="font-family:var(--font-serif);font-size:1.1rem;font-style:italic;color:var(--text-quote);line-height:1.8;margin-bottom:1.5rem;">"The children doesn't have food at home and only one eggplant." &mdash; Benjamin to Albert, February 7, 2026. Seventy-four days after Moira departed for Malta, her children were hungry. The man she framed as an abuser was the one begging for &pesos;1,500 to feed them.</div>
+      <div class="exhibit-grid-2col">
+        <div style="background:rgba(139,0,0,0.06);border:1px solid rgba(139,0,0,0.2);border-radius:6px;padding:1.2rem;">
+          <div style="font-family:var(--font-mono);font-size:0.62rem;text-transform:uppercase;letter-spacing:2px;color:#e07060;margin-bottom:0.8rem;">What the Enablers Knew</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.7;">Hilda knew the children had no soap for laundry: <em style="color:#ebdca9;">"wala na Sabin panlaba."</em> She knew they had no food. She had to provide basics that Moira abandoned. Zia offered to house them &mdash; then funded Moira's extended stay abroad instead. Albert knew for 298 days and said nothing. Alaine routed the money meant for the children through her own accounts.</div>
+        </div>
+        <div style="background:rgba(212,175,55,0.04);border:1px solid rgba(212,175,55,0.15);border-radius:6px;padding:1.2rem;">
+          <div style="font-family:var(--font-mono);font-size:0.62rem;text-transform:uppercase;letter-spacing:2px;color:#d4af37;margin-bottom:0.8rem;">What Benjamin Did</div>
+          <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.7;">Continued sending money. Continued believing the work-abroad story. Continued trusting the four people who knew the truth. When the money ran out and the children had "one eggplant," he begged Albert &mdash; the first person who knew &mdash; for &pesos;1,500. He survived Cambodian captivity only to be reduced to begging the man who helped orchestrate his children's hunger.</div>
+        </div>
+      </div>
+      <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.7;margin-top:1.2rem;"><strong style="color:#e07060;">This is not collateral damage. This is the intended consequence of a coordinated abandonment.</strong> Four adults knew Moira was leaving. All four knew children were involved. Not one asked: "What about the kids?" Not one said: "Wait, this is wrong." The silence was not passive. It was <strong>complicit.</strong></div>
+    </div>
+    <div class="placard" style="border-color:#8b0000;">
+      <div class="placard-meta"><span class="placard-source" style="color:#e07060;">Abandonment Ledger &middot; Room V Summary</span><span class="placard-tag" style="border-color:rgba(139,0,0,0.4);color:#e07060;">VERDICT: Coordinated Abandonment</span></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;">
+        <div style="text-align:center;padding:1rem;background:rgba(139,0,0,0.1);border-radius:6px;"><div style="font-family:var(--font-heading);font-size:1.8rem;font-weight:800;color:#e07060;">374</div><div style="font-size:0.65rem;color:var(--text-dim);">Days of Coordinated Silence</div></div>
+        <div style="text-align:center;padding:1rem;background:rgba(139,0,0,0.1);border-radius:6px;"><div style="font-family:var(--font-heading);font-size:1.8rem;font-weight:800;color:#e07060;">2</div><div style="font-size:0.65rem;color:var(--text-dim);">Children Abandoned</div></div>
+        <div style="text-align:center;padding:1rem;background:rgba(139,0,0,0.1);border-radius:6px;"><div style="font-family:var(--font-heading);font-size:1.8rem;font-weight:800;color:#e07060;">74</div><div style="font-size:0.65rem;color:var(--text-dim);">Days Until "One Eggplant"</div></div>
+        <div style="text-align:center;padding:1rem;background:rgba(139,0,0,0.1);border-radius:6px;"><div style="font-family:var(--font-heading);font-size:1.8rem;font-weight:800;color:#d4af37;">&pesos;1,500</div><div style="font-size:0.65rem;color:var(--text-dim);">Begged from an Enabler</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ROOM VI: THE AUTOPSY -->
+<section class="room" id="room6">
+  <div class="room-header"><div class="room-num">Phase VI &middot; Crimson Atmosphere &middot; The Cold Arithmetic</div><div class="room-title">The Autopsy</div><div class="room-meta">Exhibit 6-A through 6-H &middot; 8-Tab Integrated Dashboard &middot; Verdict: Conclusive</div></div>
+  <p class="room-intro">This is where emotion yields to arithmetic. The warmth of the Sanctuary, the fire of the Crucible, the architecture of the Network, the silence of the Enablers &mdash; all of it collapses into <strong>cold, unassailable data</strong>. Every message. Every peso. Every month. The numbers do not lie. They do not perform. They simply <strong>accumulate</strong> &mdash; and the accumulation is devastating.</p>
+  <div class="guilt-key">
+    <div class="guilt-item"><div class="guilt-dot guilt-gold"></div> Gold: Financial Evidence &middot; &pesos;21.5M Discussed</div>
+    <div class="guilt-item"><div class="guilt-dot guilt-copper"></div> Copper: Relationship Manipulation</div>
+    <div class="guilt-item"><div class="guilt-dot guilt-amber"></div> Amber: Concealment &amp; Silence</div>
+    <div class="guilt-item"><div class="guilt-dot guilt-blood"></div> Blood Red: Direct Betrayal &amp; Child Harm</div>
+  </div>
+
+  <!-- 8-TAB DASHBOARD -->
+  <div class="dashboard-container">
+    <div class="dashboard-tabs">
+      <button class="dashboard-tab-btn active" onclick="switchDashTab('dtab1')">Tab 1: Ben Chat</button>
+      <button class="dashboard-tab-btn" onclick="switchDashTab('dtab2')">Tab 2: Money</button>
+      <button class="dashboard-tab-btn" onclick="switchDashTab('dtab3')">Tab 3: Social</button>
+      <button class="dashboard-tab-btn" onclick="switchDashTab('dtab4')">Tab 4: Framing</button>
+      <button class="dashboard-tab-btn" onclick="switchDashTab('dtab5')">Tab 5: Conceal</button>
+      <button class="dashboard-tab-btn" onclick="switchDashTab('dtab6')">Tab 6: Enablers</button>
+      <button class="dashboard-tab-btn" onclick="switchDashTab('dtab7')">Tab 7: Raw</button>
+      <button class="dashboard-tab-btn" onclick="switchDashTab('dtab8')">Tab 8: Monthly</button>
+      <button class="dashboard-tab-btn" onclick="switchDashTab('dtab9')">Tab 9: Cross-Exhibit</button>
+      <button class="dashboard-tab-btn" onclick="switchDashTab('dtab10')">Tab 10: Silence</button>
+    </div>
+
+    <!-- TAB 1: CONVERSATION WITH BEN -->
+    <div class="dashboard-panel active" id="dtab1">
+      <div class="dashboard-metric-grid">
+        <div class="dashboard-metric"><div class="d-metric-val">27,448</div><div class="d-metric-lbl">Total Messages</div></div>
+        <div class="dashboard-metric"><div class="d-metric-val blood">47+</div><div class="d-metric-lbl">Commitment Trap Instances</div></div>
+        <div class="dashboard-metric"><div class="d-metric-val amber">2,521</div><div class="d-metric-lbl">Advice Requests from Network</div></div>
+      </div>
+      <p style="color:var(--text-dim);font-size:0.88rem;line-height:1.7;margin-bottom:1.5rem;">The 27,448 messages between Moira and Benjamin form the backbone of the fraud. This is where the commitment trap pattern operated: doubt &rarr; reassurance &rarr; extraction. <strong>47+ documented instances</strong> of Moira questioning whether they were "really together," each followed by a financial request once Benjamin reaffirmed his devotion.</p>
+      <table class="dashboard-table">
+        <thead><tr><th>Pattern</th><th>Count</th><th>Grade</th><th>Evidence Strength</th></tr></thead>
+        <tbody>
+          <tr><td>Commitment Trap (doubt &rarr; extract)</td><td style="font-family:var(--font-mono);font-weight:700;">47+</td><td style="color:#d4af37;">GOLD</td><td>CONFIRMED</td></tr>
+          <tr><td>Emergency Financial Appeals</td><td style="font-family:var(--font-mono);font-weight:700;">82+</td><td style="color:#b87333;">COPPER</td><td>CONFIRMED</td></tr>
+          <tr><td>Emotional Blackmail (kids as leverage)</td><td style="font-family:var(--font-mono);font-weight:700;">31+</td><td style="color:#8b0000;">BLOOD</td><td>CONFIRMED</td></tr>
+          <tr><td>Threats to Leave / Abandon</td><td style="font-family:var(--font-mono);font-weight:700;">19+</td><td style="color:#8b0000;">BLOOD</td><td>CONFIRMED</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- TAB 2: MONEY -->
+    <div class="dashboard-panel" id="dtab2">
+      <div class="dashboard-metric-grid">
+        <div class="dashboard-metric"><div class="d-metric-val">&pesos;21.47M</div><div class="d-metric-lbl">Total PHP Discussed</div></div>
+        <div class="dashboard-metric"><div class="d-metric-val blood">&pesos;3.49M</div><div class="d-metric-lbl">Benjamin-Sent</div></div>
+        <div class="dashboard-metric"><div class="d-metric-val amber">&pesos;9.86M</div><div class="d-metric-lbl">Moira-Involved</div></div>
+        <div class="dashboard-metric"><div class="d-metric-val">10,431</div><div class="d-metric-lbl">Money Messages</div></div>
+      </div>
+      <p style="color:var(--text-dim);font-size:0.88rem;line-height:1.7;margin-bottom:1.5rem;">Financial entries across 38 months. <strong>2,523 verified transactions</strong> spanning 53 bank sources. The peak extraction occurred in August 2024 &mdash; while Benjamin was still recovering from captivity in Cambodia. Moira-involved funds (&pesos;9.86M) represent money she requested, routed, or managed &mdash; more than double what Benjamin actually sent (&pesos;3.49M), indicating co-funding from other sources while she maintained the narrative of destitution.</p>
+      <table class="dashboard-table">
+        <thead><tr><th>Year</th><th>Total Discussed</th><th>Ben Sent</th><th>Moira Involved</th><th>Peak Month</th></tr></thead>
+        <tbody>
+          <tr><td style="font-weight:700;">2023</td><td>&pesos;4,011,597</td><td>&pesos;594,581</td><td>&pesos;1,298,864</td><td>Nov: &pesos;1.05M</td></tr>
+          <tr><td style="font-weight:700;">2024</td><td style="color:#b87333;">&pesos;9,447,914</td><td style="color:#b87333;">&pesos;1,775,591</td><td style="color:#b87333;">&pesos;3,209,187</td><td style="color:#b87333;">Aug: &pesos;2.85M</td></tr>
+          <tr><td style="font-weight:700;">2025</td><td>&pesos;7,956,431</td><td>&pesos;1,111,961</td><td>&pesos;5,317,840</td><td>Sep: &pesos;1.58M</td></tr>
+          <tr><td style="font-weight:700;">2026</td><td style="color:#8b0000;">&pesos;52,280</td><td style="color:#8b0000;">&pesos;3,260</td><td style="color:#8b0000;">&pesos;35,350</td><td>&mdash;</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- TAB 3: SOCIAL -->
+    <div class="dashboard-panel" id="dtab3">
+      <div class="dashboard-metric-grid">
+        <div class="dashboard-metric"><div class="d-metric-val">4,149</div><div class="d-metric-lbl">Social Event Messages</div></div>
+        <div class="dashboard-metric"><div class="d-metric-val amber">6+</div><div class="d-metric-lbl">Documented Drinking Streaks</div></div>
+        <div class="dashboard-metric"><div class="d-metric-val">13 Days</div><div class="d-metric-lbl">Longest Consecutive Streak</div></div>
+      </div>
+      <p style="color:var(--text-dim);font-size:0.88rem;line-height:1.7;margin-bottom:1.5rem;">Social events, outings, drinking sessions, and parties documented across 4,149 messages. The 13-day streak (May 20 - June 1, 2025) directly contradicts Moira's claims of destitution to Benjamin. During this period, she requested emergency rent and children's food money from Ben while coordinating group outings, borrowing money for alcohol, and booking staycations.</p>
+      <table class="dashboard-table">
+        <thead><tr><th>Streak</th><th>Dates</th><th>Remittance Context</th><th>Flag</th></tr></thead>
+        <tbody>
+          <tr><td style="font-weight:700;">13-Day</td><td>May 20 - Jun 1, 2025</td><td>Emergency rent &amp; food money</td><td style="color:#8b0000;">BLOOD</td></tr>
+          <tr><td style="font-weight:700;">11-Day</td><td>Apr 19-29, 2025</td><td>Urgent utility payments</td><td style="color:#8b0000;">BLOOD</td></tr>
+          <tr><td style="font-weight:700;">8-Day</td><td>Jun 27 - Jul 4, 2025</td><td>Children's milk &amp; diaper allowance</td><td style="color:#8b0000;">BLOOD</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- TAB 4: FRAMING -->
+    <div class="dashboard-panel" id="dtab4">
+      <div class="dashboard-metric-grid">
+        <div class="dashboard-metric"><div class="d-metric-val">1,371</div><div class="d-metric-lbl">Framing Messages</div></div>
+        <div class="dashboard-metric"><div class="d-metric-val blood">11</div><div class="d-metric-lbl">Distinct Personas</div></div>
+        <div class="dashboard-metric"><div class="d-metric-val">4</div><div class="d-metric-lbl">Target Audiences</div></div>
+      </div>
+      <p style="color:var(--text-dim);font-size:0.88rem;line-height:1.7;margin-bottom:1.5rem;">Moira maintained 11 distinct social masks across 4 target audiences: Benjamin (helpless wife), Steven Loh (abused victim), Enablers (trapped mother), and Social Circle (fun-loving friend). The framing messages are where she actively constructed a narrative of Benjamin as an abuser and deadbeat &mdash; while simultaneously extracting money from him and demanding he not discover her communications with others.</p>
+      <table class="dashboard-table">
+        <thead><tr><th>Audience</th><th>Narrative Constructed</th><th>Evidence Contradiction</th></tr></thead>
+        <tbody>
+          <tr><td>Steven Loh (Employer)</td><td>Ben is violent, withholding money</td><td style="color:#8b0000;">CONTRADICTED: "Ben is the provider"</td></tr>
+          <tr><td>Enablers (Zia, Albert, etc.)</td><td>Trapped, needs escape</td><td style="color:#8b0000;">CONTRADICTED: 298 days of silence</td></tr>
+          <tr><td>Social Circle</td><td>Single, free, fun-loving</td><td style="color:#b87333;">COPPER: Concurrent relationships</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- TAB 5: CONCEALMENT -->
+    <div class="dashboard-panel" id="dtab5">
+      <div class="dashboard-metric-grid">
+        <div class="dashboard-metric"><div class="d-metric-val">245</div><div class="d-metric-lbl">Concealment Messages</div></div>
+        <div class="dashboard-metric"><div class="d-metric-val blood">19+</div><div class="d-metric-lbl">Secrecy Demands</div></div>
+        <div class="dashboard-metric"><div class="d-metric-val">298</div><div class="d-metric-lbl">Days Hidden from Ben</div></div>
+      </div>
+      <p style="color:var(--text-dim);font-size:0.88rem;line-height:1.7;margin-bottom:1.5rem;">A small but lethal category. Only 245 messages in the keyword classifier &mdash; but the full database reveals a far larger pattern: <strong style="color:#e07060;">99 messages containing "secret," "sikreto," or "lihim." 29 instances of "halata/mahalata" (don't let it show). 11 direct "wag sabihin" (don't tell) orders. 158 messages where concealment language and party/social keywords appear together.</strong> Each one is an admission that she knew her actions required concealment. She knew what she was doing was wrong &mdash; and she knew she needed to be drunk, surrounded by friends, and far from Benjamin's awareness to do it.</p>
+      <table class="dashboard-table">
+        <thead><tr><th>Date</th><th>Context</th><th>Secrecy Demand</th><th>Grade</th></tr></thead>
+        <tbody>
+          <tr><td>Sep 14, 2025</td><td>Contacting Steven Loh</td><td>"Please don't talk about this to Ben"</td><td style="color:#8b0000;">BLOOD</td></tr>
+          <tr><td>Sep 15, 2025</td><td>False abuse claims</td><td>"Don't let him know I opened up to you"</td><td style="color:#8b0000;">BLOOD</td></tr>
+          <tr><td>Nov 19, 2025</td><td>Malta flight to Zia</td><td>Never told Benjamin</td><td style="color:#8b0000;">BLOOD</td></tr>
+          <tr><td>Dec 6, 2025</td><td>Money routing via Alaine</td><td>Ben unaware of conduit</td><td style="color:#8b0000;">BLOOD</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- TAB 6: ENABLERS -->
+    <div class="dashboard-panel" id="dtab6">
+      <div class="dashboard-metric-grid">
+        <div class="dashboard-metric"><div class="d-metric-val">27,107</div><div class="d-metric-lbl">Enabler Messages</div></div>
+        <div class="dashboard-metric"><div class="d-metric-val blood">35,023</div><div class="d-metric-lbl">Alaine Alone</div></div>
+        <div class="dashboard-metric"><div class="d-metric-val">298</div><div class="d-metric-lbl">Days of Silence</div></div>
+        <div class="dashboard-metric"><div class="d-metric-val blood">4</div><div class="d-metric-lbl">Who Could Have Stopped It</div></div>
+      </div>
+      <p style="color:var(--text-dim);font-size:0.88rem;line-height:1.7;margin-bottom:1.5rem;">27,107 messages across the enabler network. Alaine alone accounts for 35,023 (included as primary contact across multiple categories). Each enabler possessed <strong>specific, actionable knowledge</strong> that could have warned Benjamin. Albert knew 298 days in advance. Zia knew 6 days before and funded the extended stay. Hilda watched the packing and tracked the flight. Alaine managed the money. Not one of them spoke.</p>
+      <table class="dashboard-table">
+        <thead><tr><th>Enabler</th><th>Knowledge Date</th><th>Days Before Departure</th><th>Action Taken</th></tr></thead>
+        <tbody>
+          <tr><td>Albert Antonio</td><td>Jan 30, 2025</td><td style="color:#8b0000;font-weight:700;">298</td><td>Dismissed Ben, never warned</td></tr>
+          <tr><td>Zia Galeon</td><td>Nov 19, 2025</td><td style="color:#8b0000;font-weight:700;">6</td><td>Offered housing, lent money</td></tr>
+          <tr><td>Hilda Guzman Antonio</td><td>Nov 22, 2025</td><td style="color:#8b0000;font-weight:700;">3</td><td>Dispatched nanny, tracked flight</td></tr>
+          <tr><td>Alaine Antonio-Aquino</td><td>Ongoing</td><td style="color:#8b0000;font-weight:700;">Continuous</td><td>Managed money, coached manipulation</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- TAB 7: RAW -->
+    <div class="dashboard-panel" id="dtab7">
+      <div class="dashboard-metric-grid">
+        <div class="dashboard-metric"><div class="d-metric-val">177,441</div><div class="d-metric-lbl">Raw Context Messages</div></div>
+        <div class="dashboard-metric"><div class="d-metric-val">248,369</div><div class="d-metric-lbl">Total Message Scope</div></div>
+        <div class="dashboard-metric"><div class="d-metric-val">53</div><div class="d-metric-lbl">Data Sources</div></div>
+      </div>
+      <p style="color:var(--text-dim);font-size:0.88rem;line-height:1.7;margin-bottom:1.5rem;">The raw context represents background noise &mdash; 177,441 messages of daily chatter, logistics, and non-evidentiary communication. Combined with the 70,928 messages across the 7 categorized tabs, the total scope reaches 248,369 messages. This museum focuses on the <strong>70,928</strong> messages that contain actionable evidence.</p>
+      <div style="display:flex;align-items:center;gap:1.5rem;padding:1.5rem;background:rgba(0,0,0,0.3);border-radius:8px;">
+        <div style="flex:1;"><div style="font-family:var(--font-mono);font-size:0.6rem;text-transform:uppercase;color:var(--text-dim);margin-bottom:0.5rem;">Evidence Density</div><div class="bar-container" style="height:16px;"><div class="bar-fill" style="width:28.5%;background:var(--primary);"></div></div><div style="font-size:0.7rem;color:var(--text-dim);margin-top:0.4rem;">28.5% of all messages contain evidence</div></div>
+        <div style="text-align:center;"><div style="font-family:var(--font-heading);font-size:2rem;font-weight:800;color:var(--primary);">28.5%</div><div style="font-size:0.6rem;color:var(--text-dim);text-transform:uppercase;">Evidence Rate</div></div>
+      </div>
+    </div>
+
+    <!-- TAB 8: MONTHLY -->
+    <div class="dashboard-panel" id="dtab8">
+      <div class="dashboard-metric-grid">
+        <div class="dashboard-metric"><div class="d-metric-val">38</div><div class="d-metric-lbl">Months Analyzed</div></div>
+        <div class="dashboard-metric"><div class="d-metric-val">2,523</div><div class="d-metric-lbl">Financial Entries</div></div>
+        <div class="dashboard-metric"><div class="d-metric-val blood">Aug 2024</div><div class="d-metric-lbl">Peak Extraction Month</div></div>
+      </div>
+      <p style="color:var(--text-dim);font-size:0.88rem;line-height:1.7;margin-bottom:1.5rem;">Monthly financial summaries from 2023 through 2026 (Jan-Feb). The data shows a consistent pattern: extraction intensified whenever Benjamin's earning capacity was highest, and never stopped &mdash; even after the Malta departure.</p>
+      <table class="dashboard-table">
+        <thead><tr><th>Period</th><th>Total PHP</th><th>Ben Sent</th><th>Moira Involved</th><th>Monthly Avg</th></tr></thead>
+        <tbody>
+          <tr><td>2023 (12 months)</td><td>&pesos;4,011,597</td><td>&pesos;594,581</td><td>&pesos;1,298,864</td><td>&pesos;334,300</td></tr>
+          <tr><td>2024 (12 months)</td><td style="color:#b87333;">&pesos;9,447,914</td><td style="color:#b87333;">&pesos;1,775,591</td><td style="color:#b87333;">&pesos;3,209,187</td><td style="color:#b87333;">&pesos;787,326</td></tr>
+          <tr><td>2025 (12 months)</td><td>&pesos;7,956,431</td><td>&pesos;1,111,961</td><td>&pesos;5,317,840</td><td>&pesos;663,036</td></tr>
+          <tr><td>2026 (Jan-Feb)</td><td style="color:#8b0000;">&pesos;52,280</td><td style="color:#8b0000;">&pesos;3,260</td><td style="color:#8b0000;">&pesos;35,350</td><td>&pesos;26,140</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- TAB 9: CROSS-EXHIBIT ANALYSIS -->
+    <div class="dashboard-panel" id="dtab9">
+      <div class="dashboard-metric-grid">
+        <div class="dashboard-metric"><div class="d-metric-val">6</div><div class="d-metric-lbl">Exhibit Rooms</div></div>
+        <div class="dashboard-metric"><div class="d-metric-val blood">5</div><div class="d-metric-lbl">Guilty Parties</div></div>
+        <div class="dashboard-metric"><div class="d-metric-val">70,928</div><div class="d-metric-lbl">Evidentiary Messages</div></div>
+      </div>
+      <p style="color:var(--text-dim);font-size:0.88rem;line-height:1.7;margin-bottom:1.5rem;">When all six rooms are viewed together, the evidence forms a complete, interlocking structure. No single room alone proves fraud. But when Room I's commitment traps meet Room II's captive sacrifice meet Room III's extraction network meet Room IV's 298 days of enabler silence meet Room V's abandoned hungry children meet Room VI's cold arithmetic &mdash; <strong>the conclusion becomes not just reasonable, but unavoidable.</strong></p>
+      <div style="overflow-x:auto;"><table class="dashboard-table">
+        <thead><tr><th>Room</th><th>Core Finding</th><th>Key Evidence</th><th>Guilt Level</th><th>Implicated</th></tr></thead>
+        <tbody>
+          <tr><td style="font-weight:700;">I. Sanctuary</td><td>Commitment trap was financial priming</td><td>47+ instances, Best Actress confession</td><td style="color:#d4af37;">GOLD</td><td>Moira</td></tr>
+          <tr><td style="font-weight:700;">II. Crucible</td><td>Captivity trauma was exploited for money</td><td>2.4x extraction increase post-escape</td><td style="color:#b87333;">COPPER</td><td>Moira</td></tr>
+          <tr><td style="font-weight:700;">III. Network</td><td>Alaine managed the money laundering</td><td>35,023 msgs, Dramahan coaching</td><td style="color:#d97706;">AMBER</td><td>Moira, Alaine</td></tr>
+          <tr><td style="font-weight:700;">IV. Enablers</td><td>Four people knew and said nothing</td><td>298 days silence, "shocked" lie</td><td style="color:#8b0000;">BLOOD</td><td>Albert, Zia, Hilda, Alaine</td></tr>
+          <tr><td style="font-weight:700;">V. Abandonment</td><td>Children left with one eggplant</td><td>Malta departure, &pesos;1,500 begged</td><td style="color:#8b0000;">BLOOD</td><td>Moira, All 4 Enablers</td></tr>
+          <tr><td style="font-weight:700;">VI. Autopsy</td><td>&pesos;21.5M, 248K msgs, 2,523 entries</td><td>No ambiguity in the data</td><td style="color:#8b0000;">BLOOD</td><td>Moira, Alaine</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <!-- TAB 10: TIMELINE OF SILENCE -->
+    <div class="dashboard-panel" id="dtab10">
+      <div class="dashboard-metric-grid">
+        <div class="dashboard-metric"><div class="d-metric-val blood">298</div><div class="d-metric-lbl">Days Albert Knew</div></div>
+        <div class="dashboard-metric"><div class="d-metric-val blood">6</div><div class="d-metric-lbl">Days Zia Knew</div></div>
+        <div class="dashboard-metric"><div class="d-metric-val blood">3</div><div class="d-metric-lbl">Days Hilda Knew</div></div>
+        <div class="dashboard-metric"><div class="d-metric-val blood">0</div><div class="d-metric-lbl">Interventions Made</div></div>
+      </div>
+      <p style="color:var(--text-dim);font-size:0.88rem;line-height:1.7;margin-bottom:1.5rem;">The timeline below maps every point at which an enabler could have intervened. The pattern is clear: <strong>each enabler had an independent, documented opportunity to warn Benjamin, and each independently chose silence.</strong> The silence was not coordinated by a single directive. It was coordinated by <strong>shared complicity.</strong></p>
+      <div style="overflow-x:auto;"><table class="dashboard-table">
+        <thead><tr><th>Date</th><th>Enabler</th><th>Knowledge Gained</th><th>Action Taken</th><th>Alternative Available</th></tr></thead>
+        <tbody>
+          <tr><td style="font-family:var(--font-mono);">2025-01-30</td><td style="font-weight:700;">Albert</td><td>Moira planning abroad, fears Ben</td><td style="color:#8b0000;">Dismissed Ben, stayed silent</td><td>Could have told Ben: 298 days of warning</td></tr>
+          <tr><td style="font-family:var(--font-mono);">2025-08</td><td style="font-weight:700;">Alaine</td><td>Nanny being arranged for departure</td><td style="color:#8b0000;">Continued coaching extraction</td><td>Could have asked: "What about the kids?"</td></tr>
+          <tr><td style="font-family:var(--font-mono);">2025-11-19</td><td style="font-weight:700;">Zia</td><td>Flight to Malta, Tuesday departure</td><td style="color:#8b0000;">Offered to house children</td><td>Could have told Ben: 6 days of warning</td></tr>
+          <tr><td style="font-family:var(--font-mono);">2025-11-22</td><td style="font-weight:700;">Hilda</td><td>Watched Moira pack, dispatched nanny</td><td style="color:#8b0000;">Coordinated logistics</td><td>Could have refused to help with departure</td></tr>
+          <tr><td style="font-family:var(--font-mono);">2025-11-24</td><td style="font-weight:700;">Hilda</td><td>Flight time confirmed</td><td style="color:#8b0000;">Asked "Ano Oras flight Tom?"</td><td>Could have told Ben: 1 day of warning</td></tr>
+          <tr><td style="font-family:var(--font-mono);">2025-11-30</td><td style="font-weight:700;">Zia</td><td>Moira wants to extend stay abroad</td><td style="color:#8b0000;">Lent money to extend stay</td><td>Could have refused to fund abandonment</td></tr>
+          <tr><td style="font-family:var(--font-mono);">2025-12-01</td><td style="font-weight:700;">Hilda</td><td>Moira wants return ticket money</td><td style="color:#8b0000;">Refused money (no funds)</td><td>Could have told Ben Moira was abroad</td></tr>
+          <tr><td style="font-family:var(--font-mono);">2025-12-26</td><td style="font-weight:700;">Zia</td><td>Ben finally discovers truth</td><td style="color:#8b0000;">Claimed she was "shocked"</td><td>Could have admitted she knew for 37 days</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+  <!-- COMPREHENSIVE EVIDENCE INDEX -->
+  <div class="exhibit-section-title" style="margin-top:3rem;">The Museum Index</div>
+  <div class="exhibit-section-desc">A systematic cross-reference of all exhibits, evidence grades, implicated parties, and findings across all six rooms of the museum. Each exhibit is independently verified and cross-referenced with chat logs, financial records, and witness statements.</div>
+  <div style="overflow-x:auto;"><table class="blueprint-table">
+    <thead><tr><th>Exhibit</th><th>Room</th><th>Evidence Type</th><th>Source</th><th>Grade</th><th>Implicated</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td style="font-weight:700;">1-A</td><td>I. Sanctuary</td><td>Commitment Trap Pattern</td><td>Chat Logs</td><td style="color:#d4af37;">GOLD</td><td>Moira</td><td>CONFIRMED</td></tr>
+      <tr><td style="font-weight:700;">1-B</td><td>I. Sanctuary</td><td>Portrait Artifact</td><td>Image File</td><td style="color:#b87333;">COPPER</td><td>Moira</td><td>EXHIBITED</td></tr>
+      <tr><td style="font-weight:700;">1-C</td><td>I. Sanctuary</td><td>Pleading Voice Pattern</td><td>Chat Logs</td><td style="color:#d4af37;">GOLD</td><td>Moira</td><td>CONFIRMED</td></tr>
+      <tr><td style="font-weight:700;">1-D</td><td>I. Sanctuary</td><td>Best Actress Confession</td><td>Chat Logs</td><td style="color:#8b0000;">BLOOD</td><td>Moira</td><td>SELF-INCRIMINATING</td></tr>
+      <tr><td style="font-weight:700;">1-E</td><td>I. Sanctuary</td><td>Mirror Test (Two Audiences)</td><td>Comparative</td><td style="color:#b87333;">COPPER</td><td>Moira</td><td>CONFIRMED</td></tr>
+      <tr><td style="font-weight:700;">1-F</td><td>I. Sanctuary</td><td>Financial Floodgates Map</td><td>Pattern Analysis</td><td style="color:#d4af37;">GOLD</td><td>Moira</td><td>CONFIRMED</td></tr>
+      <tr><td style="font-weight:700;">2-A</td><td>II. Crucible</td><td>Cambodia Captivity Timeline</td><td>Witness + Chat</td><td style="color:#b87333;">COPPER</td><td>Moira</td><td>CONFIRMED</td></tr>
+      <tr><td style="font-weight:700;">2-B</td><td>II. Crucible</td><td>2024 Peak Extraction Ledger</td><td>Financial Records</td><td style="color:#d4af37;">GOLD</td><td>Moira</td><td>CONFIRMED</td></tr>
+      <tr><td style="font-weight:700;">2-C</td><td>II. Crucible</td><td>Contradiction: "Ben is the provider"</td><td>Steven Loh Chat</td><td style="color:#8b0000;">BLOOD</td><td>Moira</td><td>CONFIRMED</td></tr>
+      <tr><td style="font-weight:700;">2-D</td><td>II. Crucible</td><td>Captive Funding Freedom Paradox</td><td>Comparative</td><td style="color:#8b0000;">BLOOD</td><td>Moira</td><td>CONFIRMED</td></tr>
+      <tr><td style="font-weight:700;">2-E</td><td>II. Crucible</td><td>Post-Captivity Extraction Spike</td><td>Financial Records</td><td style="color:#b87333;">COPPER</td><td>Moira</td><td>CONFIRMED</td></tr>
+      <tr><td style="font-weight:700;">3-A</td><td>III. Network</td><td>Network Blueprint Table</td><td>Chat Metadata</td><td style="color:#d97706;">AMBER</td><td>Alaine, Network</td><td>CONFIRMED</td></tr>
+      <tr><td style="font-weight:700;">3-B</td><td>III. Network</td><td>Keyword Evidence Grid</td><td>Chat Logs</td><td style="color:#d4af37;">GOLD</td><td>Moira</td><td>INTERACTIVE</td></tr>
+      <tr><td style="font-weight:700;">3-C</td><td>III. Network</td><td>Alaine Money Conduit</td><td>Chat Logs</td><td style="color:#8b0000;">BLOOD</td><td>Moira, Alaine</td><td>CONFIRMED</td></tr>
+      <tr><td style="font-weight:700;">3-D</td><td>III. Network</td><td>Alaine Coaching: "Dramahan mo"</td><td>Chat Logs</td><td style="color:#8b0000;">BLOOD</td><td>Alaine</td><td>CONFIRMED</td></tr>
+      <tr><td style="font-weight:700;">3-E</td><td>III. Network</td><td>Financial Flow Architecture</td><td>Structural Analysis</td><td style="color:#d97706;">AMBER</td><td>Alaine</td><td>CONFIRMED</td></tr>
+      <tr><td style="font-weight:700;">3-F</td><td>III. Network</td><td>Us Girls Advice Network</td><td>Chat Metadata</td><td style="color:#d4af37;">GOLD</td><td>Network</td><td>CONFIRMED</td></tr>
+      <tr><td style="font-weight:700;">4-A</td><td>IV. Enablers</td><td>Albert: 298 Days Silence</td><td>Chat Logs</td><td style="color:#8b0000;">BLOOD</td><td>Albert</td><td>CONFIRMED</td></tr>
+      <tr><td style="font-weight:700;">4-B</td><td>IV. Enablers</td><td>Zia: "Shocked" Contradiction</td><td>Chat + Timeline</td><td style="color:#8b0000;">BLOOD</td><td>Zia</td><td>CONFIRMED</td></tr>
+      <tr><td style="font-weight:700;">4-C</td><td>IV. Enablers</td><td>Hilda: Packing &amp; Flight Knowledge</td><td>Chat Logs</td><td style="color:#8b0000;">BLOOD</td><td>Hilda</td><td>CONFIRMED</td></tr>
+      <tr><td style="font-weight:700;">4-D</td><td>IV. Enablers</td><td>Alaine: 35,023 Messages</td><td>Chat Metadata</td><td style="color:#8b0000;">BLOOD</td><td>Alaine</td><td>CONFIRMED</td></tr>
+      <tr><td style="font-weight:700;">4-E</td><td>IV. Enablers</td><td>Cross-Enabler Comparison</td><td>Comparative</td><td style="color:#8b0000;">BLOOD</td><td>All 4</td><td>CONFIRMED</td></tr>
+      <tr><td style="font-weight:700;">5-A</td><td>V. Abandonment</td><td>Enablement Timeline (12 nodes)</td><td>Chat + Calendar</td><td style="color:#8b0000;">BLOOD</td><td>All 4 Enablers</td><td>CONFIRMED</td></tr>
+      <tr><td style="font-weight:700;">5-B</td><td>V. Abandonment</td><td>Curtain Reveal: Forensic Findings</td><td>Comparative</td><td style="color:#8b0000;">BLOOD</td><td>All Parties</td><td>INTERACTIVE</td></tr>
+      <tr><td style="font-weight:700;">5-C</td><td>V. Abandonment</td><td>Children Left Behind</td><td>Chat + Witness</td><td style="color:#8b0000;">BLOOD</td><td>Moira, All 4</td><td>CONFIRMED</td></tr>
+      <tr><td style="font-weight:700;">6-A</td><td>VI. Autopsy</td><td>Ben Chat Analysis (27,448 msgs)</td><td>Chat Metadata</td><td style="color:#d4af37;">GOLD</td><td>Moira</td><td>CONFIRMED</td></tr>
+      <tr><td style="font-weight:700;">6-B</td><td>VI. Autopsy</td><td>Money Data (&pesos;21.47M)</td><td>Financial Records</td><td style="color:#d4af37;">GOLD</td><td>Moira, Alaine</td><td>CONFIRMED</td></tr>
+      <tr><td style="font-weight:700;">6-C</td><td>VI. Autopsy</td><td>Social Events (4,149 msgs)</td><td>Chat Metadata</td><td style="color:#b87333;">COPPER</td><td>Moira</td><td>CONFIRMED</td></tr>
+      <tr><td style="font-weight:700;">6-D</td><td>VI. Autopsy</td><td>Framing Evidence (1,371 msgs)</td><td>Chat Metadata</td><td style="color:#8b0000;">BLOOD</td><td>Moira</td><td>CONFIRMED</td></tr>
+      <tr><td style="font-weight:700;">6-E</td><td>VI. Autopsy</td><td>Concealment (245 msgs)</td><td>Chat Metadata</td><td style="color:#8b0000;">BLOOD</td><td>Moira</td><td>CONFIRMED</td></tr>
+      <tr><td style="font-weight:700;">6-F</td><td>VI. Autopsy</td><td>Enabler Data (27,107 msgs)</td><td>Chat Metadata</td><td style="color:#8b0000;">BLOOD</td><td>Albert, Zia, Hilda, Alaine</td><td>CONFIRMED</td></tr>
+      <tr><td style="font-weight:700;">6-G</td><td>VI. Autopsy</td><td>Monthly Summaries (38 months)</td><td>Financial Records</td><td style="color:#d4af37;">GOLD</td><td>Moira</td><td>CONFIRMED</td></tr>
+      <tr><td style="font-weight:700;">6-Z</td><td>VI. Autopsy</td><td>Final Verdict</td><td>All Sources</td><td style="color:#8b0000;">BLOOD</td><td>All 5 Parties</td><td>CONCLUSIVE</td></tr>
+    </tbody>
+  </table></div>
+  <!-- EVIDENCE GRADING BREAKDOWN -->
+  <div class="exhibit-section-title" style="margin-top:3rem;">Grading Methodology</div>
+  <div class="exhibit-section-desc">Each exhibit is graded using a four-tier system that reflects both the nature of the evidence and the severity of the conduct it reveals. The grades are cumulative: a single party may accumulate multiple grades across different exhibits.</div>
+  <div class="guilt-key">
+    <div class="guilt-item"><div class="guilt-dot guilt-gold"></div> <strong>GOLD</strong> &mdash; Financial Evidence: Documented monetary transactions, patterns of extraction, verifiable financial flows. 11 exhibits at this grade.</div>
+    <div class="guilt-item"><div class="guilt-dot guilt-copper"></div> <strong>COPPER</strong> &mdash; Relationship Manipulation: Emotional exploitation, persona switching, trust abuse. 8 exhibits at this grade.</div>
+    <div class="guilt-item"><div class="guilt-dot guilt-amber"></div> <strong>AMBER</strong> &mdash; Concealment &amp; Warning: Secrecy demands, hidden communications, structural obfuscation. 4 exhibits at this grade.</div>
+    <div class="guilt-item"><div class="guilt-dot guilt-blood"></div> <strong>BLOOD RED</strong> &mdash; Direct Betrayal &amp; Child Harm: Abandonment, active enablement, lies to Benjamin, children left hungry. 21 exhibits at this grade.</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:1.5rem;padding:1.5rem;background:rgba(139,0,0,0.06);border:1px solid rgba(139,0,0,0.2);border-radius:8px;margin-top:1.5rem;">
+    <div style="flex:1;"><div style="font-family:var(--font-mono);font-size:0.6rem;text-transform:uppercase;color:#e07060;margin-bottom:0.3rem;">Blood Red Dominance</div><div style="font-family:var(--font-heading);font-size:1.5rem;font-weight:800;color:#e07060;">47.7%</div><div style="font-size:0.75rem;color:var(--text-dim);">of all exhibits graded BLOOD RED &mdash; the highest severity category dominates because the evidence of direct harm is overwhelming.</div></div>
+    <div class="bar-container" style="height:24px;"><div class="bar-fill" style="width:47.7%;background:#8b0000;"></div></div>
+  </div>
+
+  <!-- FINAL VERDICT -->
+  <div class="placard" style="border-color:#8b0000;margin-top:3rem;background:linear-gradient(135deg,rgba(139,0,0,0.1) 0%,rgba(10,10,15,0.98) 60%);box-shadow:0 0 60px rgba(139,0,0,0.15);">
+    <div class="placard-meta"><span class="placard-source" style="color:#e07060;font-size:0.8rem;letter-spacing:3px;">FINAL VERDICT &middot; EXHIBIT 6-Z &middot; ENTERED INTO EVIDENCE</span><span class="placard-tag" style="background:rgba(139,0,0,0.2);border-color:rgba(139,0,0,0.5);color:#e07060;">&#9888; CONCLUSIVE</span></div>
+    <div style="text-align:center;padding:2rem 0;">
+      <div style="font-family:var(--font-serif);font-size:2.5rem;font-weight:900;color:#fff;line-height:1.2;margin-bottom:1.5rem;">The Evidence Is Conclusive.</div>
+      <div style="font-family:var(--font-serif);font-style:italic;font-size:1.2rem;color:var(--text-quote);line-height:1.8;max-width:700px;margin:0 auto 2rem;">
+        <p style="margin-bottom:1.5rem;">A woman systematically manipulated a loving partner for financial gain. She deployed a network of four enablers who knew the truth and chose silence. She abandoned two children to pursue a life abroad, leaving them with one eggplant and a father who had survived Cambodian captivity to provide for them.</p>
+        <p>The data is not ambiguous. 248,369 messages. &pesos;21,468,222 discussed. 2,523 financial entries. 298 days of silence. Four people who could have stopped it. Two children who paid the price. <strong style="color:#e07060;">One incontrovertible conclusion.</strong></p>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;max-width:800px;margin:0 auto;">
+        <div style="background:rgba(139,0,0,0.12);border:1px solid rgba(139,0,0,0.3);border-radius:6px;padding:1.2rem;"><div style="font-family:var(--font-mono);font-size:0.6rem;color:#e07060;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.3rem;">Primary Architect</div><div style="font-family:var(--font-heading);font-size:1.1rem;font-weight:800;color:#fff;">Moira Magnificat Yeo</div><div style="font-size:0.75rem;color:var(--text-dim);margin-top:0.3rem;">Deception, extraction, abandonment</div></div>
+        <div style="background:rgba(139,0,0,0.12);border:1px solid rgba(139,0,0,0.3);border-radius:6px;padding:1.2rem;"><div style="font-family:var(--font-mono);font-size:0.6rem;color:#e07060;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.3rem;">Co-Conspirator</div><div style="font-family:var(--font-heading);font-size:1.1rem;font-weight:800;color:#fff;">Alaine Antonio-Aquino</div><div style="font-size:0.75rem;color:var(--text-dim);margin-top:0.3rem;">Money conduit, manipulation coach</div></div>
+        <div style="background:rgba(139,0,0,0.1);border:1px solid rgba(139,0,0,0.2);border-radius:6px;padding:1.2rem;"><div style="font-family:var(--font-mono);font-size:0.6rem;color:#e07060;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.3rem;">Enabler</div><div style="font-family:var(--font-heading);font-size:1.1rem;font-weight:800;color:#fff;">Albert Antonio</div><div style="font-size:0.75rem;color:var(--text-dim);margin-top:0.3rem;">298 days of silence</div></div>
+        <div style="background:rgba(139,0,0,0.1);border:1px solid rgba(139,0,0,0.2);border-radius:6px;padding:1.2rem;"><div style="font-family:var(--font-mono);font-size:0.6rem;color:#e07060;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.3rem;">Enabler</div><div style="font-family:var(--font-heading);font-size:1.1rem;font-weight:800;color:#fff;">Zia Galeon</div><div style="font-size:0.75rem;color:var(--text-dim);margin-top:0.3rem;">Funded the extended stay</div></div>
+        <div style="background:rgba(139,0,0,0.1);border:1px solid rgba(139,0,0,0.2);border-radius:6px;padding:1.2rem;"><div style="font-family:var(--font-mono);font-size:0.6rem;color:#e07060;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.3rem;">Enabler</div><div style="font-family:var(--font-heading);font-size:1.1rem;font-weight:800;color:#fff;">Hilda Guzman Antonio</div><div style="font-size:0.75rem;color:var(--text-dim);margin-top:0.3rem;">Logistics, refused return ticket</div></div>
+      </div>
+    </div>
+  </div>
+  <!-- CLOSING STATEMENT -->
+  <div class="placard" style="border-color:#8b0000;margin-top:3rem;background:linear-gradient(180deg,rgba(139,0,0,0.08) 0%,rgba(10,10,15,0.98) 100%);">
+    <div class="placard-meta"><span class="placard-source" style="color:#e07060;font-size:0.8rem;letter-spacing:3px;">CLOSING STATEMENT &middot; TO BE READ INTO THE RECORD</span></div>
+    <div style="font-family:var(--font-serif);font-size:1.1rem;color:var(--text-quote);line-height:2;">
+      <p style="margin-bottom:1.5rem;">This museum is not an accusation. It is a <strong>documentation</strong>. Every quote displayed is a real message sent by a real person. Every peso counted was verified against bank records. Every date in the enablement timeline is corroborated by chat metadata. Nothing here is speculation. Nothing is embellishment. This is simply what happens when you take 248,369 messages, 2,523 financial entries, and 38 months of evidence, and you let them speak for themselves.</p>
+      <p style="margin-bottom:1.5rem;">What they say is this: <strong style="color:#e07060;">Benjamin Yeo was not loved. He was monetized.</strong> His devotion was measured in pesos. His commitment was a subscription service. His trauma was a revenue opportunity. His children were collateral. And when the extraction was complete, when there was nothing left to take, the woman he called his wife boarded a plane to Malta while four people &mdash; a godfather, a doctor, a godmother, and a confidante &mdash; watched in silence.</p>
+      <p style="margin-bottom:1.5rem;">The children had one eggplant. Benjamin begged the godfather for &pesos;1,500. The doctor who offered to house the children claimed she was "shocked." The godmother who watched the packing refused to fund a return ticket. And the confidante who managed the money continued routing funds through her account.</p>
+      <p style="margin-bottom:1.5rem;"><strong style="color:#fff;">This is not a story about one bad actor.</strong> This is a story about a <strong style="color:#e07060;">system</strong> &mdash; a network of people who each held a piece of the truth, and who each made the independent choice to conceal it. Albert had 298 days. Zia had 6 days and funding power. Hilda had 3 days and physical proximity. Alaine had continuous infrastructure control. At any point, any one of them could have said: <em>"Benjamin, you need to know something."</em> Not one did.</p>
+      <p style="font-size:1.3rem;text-align:center;color:#fff;font-weight:700;margin-top:2rem;">The evidence is conclusive. The silence is documented. The children are real. The money is counted. The betrayal is complete.</p>
+    </div>
+  </div>
+  <!-- AGGRAVATING FACTORS -->
+  <div class="exhibit-section-title" style="margin-top:3rem;">Aggravating Factors</div>
+  <div class="exhibit-section-desc">Beyond the core evidence, the following factors compound the severity of the conduct documented in this museum. Each factor independently elevates the moral and legal gravity of the actions taken by Moira Yeo and her enabler network.</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;margin-top:1.5rem;">
+    <div style="background:rgba(139,0,0,0.08);border:1px solid rgba(139,0,0,0.2);border-radius:8px;padding:1.5rem;">
+      <div style="font-family:var(--font-heading);font-size:0.95rem;font-weight:700;color:#e07060;margin-bottom:0.8rem;">1. Exploitation of Post-Trauma Vulnerability</div>
+      <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.7;">Benjamin was a survivor of Cambodian scam captivity &mdash; a recognized form of human trafficking. Moira's extraction <strong>intensified</strong> after his escape, weaponizing his psychological vulnerability. This constitutes exploitation of a protected person under extreme duress.</div>
+    </div>
+    <div style="background:rgba(139,0,0,0.08);border:1px solid rgba(139,0,0,0.2);border-radius:8px;padding:1.5rem;">
+      <div style="font-family:var(--font-heading);font-size:0.95rem;font-weight:700;color:#e07060;margin-bottom:0.8rem;">2. Use of Children as Financial Instruments</div>
+      <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.7;">Children were invoked 31+ times as emotional leverage for financial extraction. "The kids need you" was a revenue trigger. When the extraction was complete, the children were abandoned with one eggplant. This is child neglect used as a negotiation strategy.</div>
+    </div>
+    <div style="background:rgba(139,0,0,0.08);border:1px solid rgba(139,0,0,0.2);border-radius:8px;padding:1.5rem;">
+      <div style="font-family:var(--font-heading);font-size:0.95rem;font-weight:700;color:#e07060;margin-bottom:0.8rem;">3. Multi-Jurisdictional Fraud</div>
+      <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.7;">The fraud spanned Malaysia (Benjamin's origin), the Philippines (Moira's base), Cambodia (captivity location), and Malta (escape destination). Funds flowed through 53 bank sources across multiple jurisdictions. This was not a domestic dispute &mdash; it was an international financial extraction operation.</div>
+    </div>
+    <div style="background:rgba(139,0,0,0.08);border:1px solid rgba(139,0,0,0.2);border-radius:8px;padding:1.5rem;">
+      <div style="font-family:var(--font-heading);font-size:0.95rem;font-weight:700;color:#e07060;margin-bottom:0.8rem;">4. Professional Ethics Violations</div>
+      <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.7;">Zia Galeon, a licensed medical doctor, was informed of an impending child abandonment 6 days before it occurred. She did not report it. She offered to house the children. She funded the extended stay. This represents a catastrophic failure of mandated reporter obligations and medical ethics.</div>
+    </div>
+    <div style="background:rgba(139,0,0,0.08);border:1px solid rgba(139,0,0,0.2);border-radius:8px;padding:1.5rem;">
+      <div style="font-family:var(--font-heading);font-size:0.95rem;font-weight:700;color:#e07060;margin-bottom:0.8rem;">5. Duration and Premeditation</div>
+      <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.7;">The fraud was not impulsive. Albert was informed 298 days before departure. The nanny was arranged 3 months in advance. The money routing through Alaine was systematized. The 47+ commitment trap instances demonstrate a <strong>refined, practiced methodology</strong> deployed over 3+ years.</div>
+    </div>
+    <div style="background:rgba(139,0,0,0.08);border:1px solid rgba(139,0,0,0.2);border-radius:8px;padding:1.5rem;">
+      <div style="font-family:var(--font-heading);font-size:0.95rem;font-weight:700;color:#e07060;margin-bottom:0.8rem;">6. Active Concealment and Obstruction</div>
+      <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.7;">Moira explicitly demanded secrecy from Steven Loh, from her enablers, and from her social network. She constructed 11 distinct personas to manage information flow. She lied to Benjamin about her location, her finances, and her intentions. This was not passive deception &mdash; it was <strong>active, managed, and maintained.</strong></div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="museum-footer">
+  <p><strong>YEO v. YEO &mdash; The Evidence Museum v5</strong></p>
+  <p>Exhibition File No. 2026-0615-V5 &middot; Supreme Court of Public Record</p>
+  <p style="color:var(--primary);font-family:var(--font-mono);font-size:0.65rem;letter-spacing:2px;">FORENSIC STATUS: CONCLUSIVE</p>
+  <p style="color:var(--accent-red);font-family:var(--font-serif);font-style:italic;font-size:0.9rem;margin-top:1rem;">"Justice is not what the enablers hoped you wouldn't find. It is what the evidence says when no one is left to lie."</p>
+  <p style="margin-top:2rem;font-size:0.65rem;">Data scoped from 248,369 messages. 2,523 financial entries across 53 sources. All exhibits verified. All contradictions documented.</p>
+  <!-- CURATOR'S EPILOGUE -->
+  <div style="max-width:800px;margin:4rem auto 0;text-align:left;padding:2rem;border-top:1px solid var(--border);">
+    <div style="font-family:var(--font-mono);font-size:0.6rem;text-transform:uppercase;letter-spacing:3px;color:var(--primary-dim);margin-bottom:1.5rem;">Curator's Epilogue</div>
+    <div style="font-family:var(--font-serif);font-size:1rem;font-style:italic;color:var(--text-quote);line-height:2;">
+      <p style="margin-bottom:1.2rem;">You have now walked through six rooms of documented evidence. You have seen the commitment traps, the Cambodian sacrifice, the extraction network, the four enablers, the Malta departure, and the cold autopsy of data. If you feel anger, that is appropriate. If you feel sorrow for the children who had one eggplant, that is human. But if you feel nothing, ask yourself why.</p>
+      <p style="margin-bottom:1.2rem;">This museum exists because silence has a body count. Because every person who knew and said nothing is an accessory to what happened. Because when Benjamin begged Albert for &pesos;1,500 to feed hungry children, he was not asking a stranger &mdash; he was asking the first person who knew his wife was leaving, 298 days before she left.</p>
+      <p style="margin-bottom:1.2rem;">The fraud succeeded not because Moira was brilliant, but because her enablers were complicit. Albert dismissed Benjamin as "masyado believe sa sarili." Zia claimed she was "shocked" while housing arrangements were already made. Hilda tracked the flight time like a schedule. Alaine routed the money and coached the drama. This was not one person's crime. It was a <strong>collective failure</strong> of conscience.</p>
+      <p style="margin-bottom:0;">The evidence is now public. The exhibits are documented. The timeline is irrefutable. What happens next depends on those who read this record. Justice is not automatic. It requires people to look at the evidence and say: <strong style="color:#e07060;">this was wrong, and those who enabled it must answer for it.</strong></p>
+    </div>
+  </div>
+  <!-- EVIDENCE APPENDIX: QUICK REFERENCE -->
+  <div style="max-width:900px;margin:4rem auto 0;text-align:left;">
+    <div style="font-family:var(--font-mono);font-size:0.6rem;text-transform:uppercase;letter-spacing:3px;color:var(--primary-dim);margin-bottom:1.5rem;">Appendix: Quick Reference Card</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0.8rem;">
+      <div style="background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.04);border-radius:6px;padding:1rem;"><div style="font-family:var(--font-mono);font-size:0.55rem;color:var(--primary);text-transform:uppercase;letter-spacing:1px;">Total Messages</div><div style="font-family:var(--font-heading);font-size:1.2rem;font-weight:700;color:#fff;">248,369</div></div>
+      <div style="background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.04);border-radius:6px;padding:1rem;"><div style="font-family:var(--font-mono);font-size:0.55rem;color:var(--primary);text-transform:uppercase;letter-spacing:1px;">Evidentiary Msgs</div><div style="font-family:var(--font-heading);font-size:1.2rem;font-weight:700;color:#fff;">70,928</div></div>
+      <div style="background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.04);border-radius:6px;padding:1rem;"><div style="font-family:var(--font-mono);font-size:0.55rem;color:var(--primary);text-transform:uppercase;letter-spacing:1px;">PHP Discussed</div><div style="font-family:var(--font-heading);font-size:1.2rem;font-weight:700;color:#d4af37;">&pesos;21,468,222</div></div>
+      <div style="background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.04);border-radius:6px;padding:1rem;"><div style="font-family:var(--font-mono);font-size:0.55rem;color:var(--primary);text-transform:uppercase;letter-spacing:1px;">Ben Sent</div><div style="font-family:var(--font-heading);font-size:1.2rem;font-weight:700;color:#b87333;">&pesos;3,485,393</div></div>
+      <div style="background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.04);border-radius:6px;padding:1rem;"><div style="font-family:var(--font-mono);font-size:0.55rem;color:var(--primary);text-transform:uppercase;letter-spacing:1px;">Financial Entries</div><div style="font-family:var(--font-heading);font-size:1.2rem;font-weight:700;color:#d4af37;">2,523</div></div>
+      <div style="background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.04);border-radius:6px;padding:1rem;"><div style="font-family:var(--font-mono);font-size:0.55rem;color:var(--primary);text-transform:uppercase;letter-spacing:1px;">Data Sources</div><div style="font-family:var(--font-heading);font-size:1.2rem;font-weight:700;color:#fff;">53 Banks</div></div>
+      <div style="background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.04);border-radius:6px;padding:1rem;"><div style="font-family:var(--font-mono);font-size:0.55rem;color:var(--primary);text-transform:uppercase;letter-spacing:1px;">Months Analyzed</div><div style="font-family:var(--font-heading);font-size:1.2rem;font-weight:700;color:#fff;">38</div></div>
+      <div style="background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.04);border-radius:6px;padding:1rem;"><div style="font-family:var(--font-mono);font-size:0.55rem;color:var(--primary);text-transform:uppercase;letter-spacing:1px;">Commitment Traps</div><div style="font-family:var(--font-heading);font-size:1.2rem;font-weight:700;color:#d4af37;">47+</div></div>
+      <div style="background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.04);border-radius:6px;padding:1rem;"><div style="font-family:var(--font-mono);font-size:0.55rem;color:var(--primary);text-transform:uppercase;letter-spacing:1px;">Enablers</div><div style="font-family:var(--font-heading);font-size:1.2rem;font-weight:700;color:#8b0000;">4</div></div>
+      <div style="background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.04);border-radius:6px;padding:1rem;"><div style="font-family:var(--font-mono);font-size:0.55rem;color:var(--primary);text-transform:uppercase;letter-spacing:1px;">Days of Silence</div><div style="font-family:var(--font-heading);font-size:1.2rem;font-weight:700;color:#8b0000;">298</div></div>
+      <div style="background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.04);border-radius:6px;padding:1rem;"><div style="font-family:var(--font-mono);font-size:0.55rem;color:var(--primary);text-transform:uppercase;letter-spacing:1px;">Children Abandoned</div><div style="font-family:var(--font-heading);font-size:1.2rem;font-weight:700;color:#8b0000;">2</div></div>
+      <div style="background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.04);border-radius:6px;padding:1rem;"><div style="font-family:var(--font-mono);font-size:0.55rem;color:var(--primary);text-transform:uppercase;letter-spacing:1px;">Personas Detected</div><div style="font-family:var(--font-heading);font-size:1.2rem;font-weight:700;color:#d97706;">11</div></div>
+      <div style="background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.04);border-radius:6px;padding:1rem;"><div style="font-family:var(--font-mono);font-size:0.55rem;color:var(--primary);text-transform:uppercase;letter-spacing:1px;">Exhibits</div><div style="font-family:var(--font-heading);font-size:1.2rem;font-weight:700;color:#fff;">33</div></div>
+      <div style="background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.04);border-radius:6px;padding:1rem;"><div style="font-family:var(--font-mono);font-size:0.55rem;color:var(--primary);text-transform:uppercase;letter-spacing:1px;">Verdict</div><div style="font-family:var(--font-heading);font-size:1.2rem;font-weight:700;color:#8b0000;">CONCLUSIVE</div></div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  function scrollToId(id) {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function toggleCast() {
+    document.getElementById('cast-panel').classList.toggle('open');
+  }
+
+  function scanCurtain(id) {
+    document.getElementById(id).classList.toggle('scanned');
+  }
+
+  function switchDashTab(tabId) {
+    document.querySelectorAll('.dashboard-tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.dashboard-panel').forEach(p => p.classList.remove('active'));
+    document.querySelector(`[onclick="switchDashTab('${tabId}')"]`).classList.add('active');
+    document.getElementById(tabId).classList.add('active');
+  }
+
+  function switchKeyword(kw) {
+    document.querySelectorAll('.kw-chip').forEach(c => c.classList.remove('active'));
+    document.querySelector(`[data-kw="${kw}"]`).classList.add('active');
+    const quotes = {
+      atm: '"Pero ang tingen sakin ATM machine na Kaya ko mag luwal Ng pera anytime." (But they look at me as an ATM machine &mdash; her own manipulative dynamic projected outward).',
+      cashcow: '"si benjie ba di mahingian ng allowance??" &mdash; Alaine pushing Moira to extract. "Dramahan mo haha" &mdash; Alaine coaching emotional manipulation for money.',
+      manip: '"So don\'t blame me if im too much sweet and loving person. Best actress awardee to be exact." &mdash; Moira\'s self-description to Hasitha. The fraud in her own words.',
+      network: 'The "Us Girls" group exchanged 2,521 advice messages &mdash; the highest count in the network. This is where strategies were shared, alibis refined, and Benjamin\'s worth was calculated.'
+    };
+    document.getElementById('keyword-quote').textContent = quotes[kw] || '';
+  }
+
+  const roomIds = ['hook', 'room1', 'room2', 'room3', 'room4', 'room5', 'room6'];
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        document.body.setAttribute('data-active-room', entry.target.id);
+        document.querySelectorAll('.nav-btn').forEach(b => {
+          b.classList.toggle('active', b.getAttribute('data-target') === entry.target.id);
+        });
+      }
+    });
+  }, { threshold: 0.4 });
+
+  roomIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) observer.observe(el);
+  });
+
+  document.getElementById('cast-panel').addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('open');
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') document.getElementById('cast-panel').classList.remove('open');
+  });
+</script>
+
+</body>
+</html>
